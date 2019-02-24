@@ -11,6 +11,7 @@ deploy:
   region: "us-east-1"
   role: $AWS_LAMBDA_ROLE
   runtime: "python3.6"
+  module_name: "lambda"
   handler_name: "main.run"
   on:
     branch: release
