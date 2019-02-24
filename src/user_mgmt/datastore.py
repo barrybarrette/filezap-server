@@ -1,6 +1,3 @@
-import boto3
-
-
 class UserDataStore(object):
     """
     Interface class for dynamodb users table
@@ -10,6 +7,7 @@ class UserDataStore(object):
         :param dynamodb: Only used for test mocking, do not pass in production code
         """
         if not dynamodb:
+            import boto3
             dynamodb = boto3.resource('dynamodb')
         self._table = dynamodb.Table('users')
 
