@@ -1,12 +1,14 @@
 language: python
 python:
   - "3.6"
-install:
-  - pip install -r requirements.txt
 jobs:
   include:
     - stage: unittest
+      name: "Unit tests"
+      before_script: pip install -r requirements-dev.txt
       script: bolt cov
-    - stage: deploy
+    - stage: deploydev
+      name: "Deploy to dev environment"
       if: branch = master AND type = push
+      before_script: pip install -r requirements-deploy.txt
       script: zappa update dev
