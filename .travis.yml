@@ -8,5 +8,5 @@ jobs:
     - stage: unittest
       script: bolt cov
     - stage: deploy
-      if: branch = master
+      if: branch = master AND type = push
       script: zappa update dev
