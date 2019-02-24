@@ -8,7 +8,8 @@ class TestUserDataStore(unittest.TestCase):
 
     def setUp(self):
         self.dynamodb = DynamoDbDouble()
-        self.data_store = datastore.UserDataStore(self.dynamodb)
+        config = {'USER_DB_TABLE': 'the_user_table'}
+        self.data_store = datastore.UserDataStore(config, self.dynamodb)
 
 
     def test_raises_if_adding_user_and_email_already_exists(self):
@@ -22,6 +23,9 @@ class TestUserDataStore(unittest.TestCase):
         self.assertEqual(self.dynamodb.invoked_put_item, user.to_dict())
 
 
+    def test_uses_configured_table_name(self):
+        self.assertEqual(self.dynamodb.invoked_table, 'the_user_table')
+
 
 
 
@@ -31,9 +35,11 @@ class DynamoDbDouble(object):
     def __init__(self):
         self._users = [{'email': 'bob@bob.bob'}]
         self.invoked_put_item = None
+        self.invoked_table = None
 
 
     def Table(self, table_name):
+        self.invoked_table = table_name
         return self
 
 
