@@ -9,20 +9,21 @@ blueprint = Blueprint(__name__, 'user_mgmt')
 
 @blueprint.route('/register', methods=['GET'])
 def register_view():
-    return render_template('register.html')
+    return render_template('no_register.html')
 
 
 @blueprint.route('/register', methods=['POST'])
 def register_post():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    user = model.User(email, password)
-    data_store = datastore.UserDataStore()
-    try:
-        data_store.add_user(user)
-        return f'User {email} was added!'
-    except datastore.DuplicateEmailError:
-        return f'User {email} is already registered, reset password?'
+    return "Registrations are closed!", 400
+    # email = request.form.get('email')
+    # password = request.form.get('password')
+    # user = model.User(email, password)
+    # data_store = datastore.UserDataStore()
+    # try:
+    #     data_store.add_user(user)
+    #     return f'User {email} was added!'
+    # except datastore.DuplicateEmailError:
+    #     return f'User {email} is already registered, reset password?'
 
 
 def register_blueprint(main_app):
