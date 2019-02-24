@@ -5,8 +5,11 @@ jobs:
   include:
     - stage: unittest
       name: "Unit tests"
-      before_script: pip install -r requirements-dev.txt
+      before_script:
+        - pip install -r requirements-dev.txt
+        - pip install coveralls
       script: bolt cov
+      after_success: coveralls
     - stage: deploydev
       name: "Deploy to dev environment"
       if: branch = master AND type = push
