@@ -3,15 +3,9 @@ python:
   - "3.6"
 install:
   - pip install -r requirements.txt
-script:
-  - bolt cov
-deploy:
-  provider: lambda
-  function_name: "filezap-server"
-  region: "us-east-1"
-  role: $AWS_LAMBDA_ROLE
-  runtime: "python3.6"
-  module_name: "lambda"
-  handler_name: "main.run"
-  on:
-    branch: release
+jobs:
+  include:
+    - stage: unittest
+      script: bolt cov
+    - stage: deploy
+      script: zappa update dev
