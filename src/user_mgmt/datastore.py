@@ -2,14 +2,14 @@ class UserDataStore(object):
     """
     Interface class for dynamodb users table
     """
-    def __init__(self, dynamodb=None):
+    def __init__(self, config, dynamodb=None):
         """
         :param dynamodb: Only used for test mocking, do not pass in production code
         """
         if not dynamodb:
             import boto3
-            dynamodb = boto3.resource('dynamodb')
-        self._table = dynamodb.Table('users')
+            dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        self._table = dynamodb.Table(config.get('USER_DB_TABLE'))
 
 
     def add_user(self, user):
