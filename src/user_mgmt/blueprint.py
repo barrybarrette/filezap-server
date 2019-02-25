@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, current_app
-from flask_login import login_required, login_user
+from flask_login import login_required
 
 import src.config_manager as config_manager
 import src.user_mgmt.controller as controller
@@ -20,15 +20,15 @@ def register_view():
 @blueprint.route('/register', methods=['POST'])
 def register_post():
     if config.get('USER_REGISTRATION_ENABLED'):
-        email = request.form.get('email')
+        username = request.form.get('username')
         password = request.form.get('password')
         user_manager = current_app.user_manager
         user_mgmt_controller = controller.UserMgmtController(user_manager)
         try:
-            user_mgmt_controller.register_user(email, password)
-            return f'User {email} was added!'
+            user_mgmt_controller.register_user(username, password)
+            return redirect('/')
         except model.DuplicateUserError:
-            return f'User {email} is already registered', 400
+            return f'User {username} is already registered', 400
     return "Registrations are closed!", 400
 
 
@@ -40,12 +40,12 @@ def login_view():
 
 @blueprint.route('/login', methods=['POST'])
 def login_post():
-    email = request.form.get('email')
+    username = request.form.get('username')
     password = request.form.get('password')
     user_manager = current_app.user_manager
     user_mgmt_controller = controller.UserMgmtController(user_manager)
     try:
-        user_mgmt_controller.login_user(email, password, login_user)
+        user_mgmt_controller.login_user(username, password)
         return redirect('/')
     except controller.InvalidCredentialsError:
         return render_template('login.html', msg='Invalid credentials!')

@@ -9,14 +9,14 @@ import src.user_mgmt.model as model
 class TestUser(unittest.TestCase):
 
     def setUp(self):
-        self.email = 'bob@bob.bob'
+        self.username = 'bob'
         self.hashed_password = 'B0bIsGr8'
         self.salt = os.urandom(32)
-        self.user = model.User(self.email, self.hashed_password, self.salt)
+        self.user = model.User(self.username, self.hashed_password, self.salt)
 
 
     def test_uses_given_attributes(self):
-        self.assertEqual(self.user.email, self.email)
+        self.assertEqual(self.user.username, self.username)
         self.assertEqual(self.user.password_hash, self.hashed_password)
         self.assertEqual(self.user.salt, self.salt)
 
@@ -24,7 +24,7 @@ class TestUser(unittest.TestCase):
     def test_to_dict(self):
         as_dict = self.user.to_dict()
         expected = {
-            'email': self.user.email,
+            'username': self.user.username,
             'password_hash': self.hashed_password,
             'salt': base64.b64encode(self.salt).decode()
         }
@@ -33,9 +33,9 @@ class TestUser(unittest.TestCase):
 
     def test_from_dict(self):
         encoded_salt = base64.b64encode(self.salt).decode()
-        user_dict = {'email': self.email, 'password_hash': self.hashed_password, 'salt': encoded_salt}
+        user_dict = {'username': self.username, 'password_hash': self.hashed_password, 'salt': encoded_salt}
         user = model.User.from_dict(user_dict)
-        self.assertEqual(user.email, self.email)
+        self.assertEqual(user.username, self.username)
         self.assertEqual(user.password_hash, self.hashed_password)
         self.assertEqual(user.salt, self.salt)
 
@@ -52,8 +52,8 @@ class TestUser(unittest.TestCase):
         self.assertEqual(self.user.is_anonymous, False)
 
 
-    def test_uses_email_address_as_id(self):
-        self.assertEqual(self.user.get_id(), self.user.email)
+    def test_uses_username_address_as_id(self):
+        self.assertEqual(self.user.get_id(), self.user.username)
 
 
 
@@ -72,24 +72,24 @@ class TestUserManager(unittest.TestCase):
 
 
     def test_can_add_user(self):
-        user = model.User('bob@bob.bob', 'bob_password', b'salt')
+        user = model.User('bob', 'bob_password', b'salt')
         self.user_manager.add_user(user)
         self.assertIs(self.data_store.added_user, user)
         self.assertEqual(self.user_manager.user_count, 1)
 
 
-    def test_adding_user_with_duplicate_email_raises_exception(self):
-        user = model.User('bob@bob.bob', 'bob_password', b'salt')
+    def test_adding_user_with_duplicate_username_raises_exception(self):
+        user = model.User('bob', 'bob_password', b'salt')
         self.user_manager.add_user(user)
         with self.assertRaises(model.DuplicateUserError):
             self.user_manager.add_user(user)
 
 
-    def test_can_get_user_by_email(self):
-        email = 'bob@bob.bob'
-        user = model.User(email, 'bob_password', b'salt')
+    def test_can_get_user_by_username(self):
+        username = 'bob'
+        user = model.User(username, 'bob_password', b'salt')
         self.user_manager.add_user(user)
-        loaded_user = self.user_manager.get_user(email)
+        loaded_user = self.user_manager.get_user(username)
         self.assertIs(loaded_user, user)
 
 
@@ -110,7 +110,7 @@ class DataStoreDouble(object):
 
 
     def get_all_users(self):
-        return [model.User('email1', 'password1', b'salt1'), model.User('email2', 'password2', b'salt2')]
+        return [model.User('username1', 'password1', b'salt1'), model.User('username2', 'password2', b'salt2')]
 
 
     def add_user(self, user):

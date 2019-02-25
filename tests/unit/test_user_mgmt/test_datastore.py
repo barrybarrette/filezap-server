@@ -34,8 +34,8 @@ class DynamoDbDouble(object):
 
     def __init__(self):
         self._users = [
-            {'email': 'bob@bob.bob', 'password_hash': 'a_hash', 'salt': 'somesalt='},
-            {'email': 'bob2@bob.bob', 'password_hash': 'a_hash', 'salt': 'somesalt='}
+            {'username': 'bob', 'password_hash': 'a_hash', 'salt': 'somesalt='},
+            {'username': 'bob2', 'password_hash': 'a_hash', 'salt': 'somesalt='}
         ]
         self.invoked_put_item = None
         self.invoked_table = None

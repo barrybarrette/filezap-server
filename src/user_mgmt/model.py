@@ -2,8 +2,8 @@ import base64
 
 class User(object):
 
-    def __init__(self, email, password_hash, salt):
-        self.email = email
+    def __init__(self, username, password_hash, salt):
+        self.username = username
         self.password_hash = password_hash
         self.salt = salt
         self.is_authenticated = False
@@ -20,12 +20,12 @@ class User(object):
 
 
     def get_id(self):
-        return self.email
+        return self.username
 
 
     def to_dict(self):
         return {
-            'email': self.email,
+            'username': self.username,
             'password_hash': self.password_hash,
             'salt': base64.b64encode(self.salt).decode()
         }
@@ -33,7 +33,7 @@ class User(object):
 
     @classmethod
     def from_dict(cls, user_dict):
-        return cls(user_dict.get('email'), user_dict.get('password_hash'), base64.b64decode(user_dict.get('salt')))
+        return cls(user_dict.get('username'), user_dict.get('password_hash'), base64.b64decode(user_dict.get('salt')))
 
 
 
@@ -49,8 +49,8 @@ class UserManager(object):
         return len(self._users)
 
 
-    def get_user(self, email):
-        return self._users.get(email)
+    def get_user(self, username):
+        return self._users.get(username)
 
 
     def add_user(self, user):
@@ -63,9 +63,9 @@ class UserManager(object):
 
 
     def _do_add_user(self, user):
-        if user.email in self._users:
+        if user.username in self._users:
             raise DuplicateUserError()
-        self._users[user.email] = user
+        self._users[user.username] = user
 
 
 
