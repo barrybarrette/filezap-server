@@ -12,13 +12,8 @@ class TestUserDataStore(unittest.TestCase):
         self.data_store = datastore.UserDataStore(config, self.dynamodb)
 
 
-    def test_raises_if_adding_user_and_email_already_exists(self):
-        with self.assertRaises(datastore.DuplicateEmailError):
-            self.data_store.add_user(model.User('bob@bob.bob', 'a_password'))
-
-
-    def test_adds_user_to_dynamo_db_if_email_does_not_exist(self):
-        user = model.User('realuser@gmail.com', 'a_password')
+    def test_adds_user_to_dynamo_db(self):
+        user = model.User('realuser@gmail.com', 'a_password', b'salt')
         self.data_store.add_user(user)
         self.assertEqual(self.dynamodb.invoked_put_item, user.to_dict())
 
@@ -27,15 +22,24 @@ class TestUserDataStore(unittest.TestCase):
         self.assertEqual(self.dynamodb.invoked_table, 'the_user_table')
 
 
-
+    def test_can_get_all_users(self):
+        users = self.data_store.get_all_users()
+        self.assertTrue(self.dynamodb.get_all_invoked)
+        self.assertEqual(len(users), 2)
+        for user in users:
+            self.assertIsInstance(user, model.User)
 
 
 class DynamoDbDouble(object):
 
     def __init__(self):
-        self._users = [{'email': 'bob@bob.bob'}]
+        self._users = [
+            {'email': 'bob@bob.bob', 'password_hash': 'a_hash', 'salt': 'somesalt='},
+            {'email': 'bob2@bob.bob', 'password_hash': 'a_hash', 'salt': 'somesalt='}
+        ]
         self.invoked_put_item = None
         self.invoked_table = None
+        self.get_all_invoked = False
 
 
     def Table(self, table_name):
@@ -53,3 +57,8 @@ class DynamoDbDouble(object):
 
     def put_item(self, Item):
         self.invoked_put_item = Item
+
+
+    def scan(self):
+        self.get_all_invoked = True
+        return {'Items': self._users}
