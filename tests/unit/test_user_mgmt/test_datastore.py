@@ -47,14 +47,6 @@ class DynamoDbDouble(object):
         return self
 
 
-    def get_item(self, Key):
-        email = Key.get('email')
-        for user in self._users:
-            if user.get('email') == email:
-                return {'Item': user}
-        return {}
-
-
     def put_item(self, Item):
         self.invoked_put_item = Item
 
