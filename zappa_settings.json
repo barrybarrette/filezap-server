@@ -1,0 +1,16 @@
+{
+    "dev": {
+        "app_function": "main.main_app",
+        "aws_region": "us-east-1",
+        "project_name": "filezap-server",
+        "runtime": "python3.6",
+        "s3_bucket": "zappa-ijgoxihnn"
+    },
+    "prod": {
+        "app_function": "main.main_app",
+        "aws_region": "us-east-1",
+        "project_name": "filezap-server",
+        "runtime": "python3.6",
+        "s3_bucket": "zappa-filezap",
+    }
+}
