@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, redirect, current_app
+from flask_login import login_required, login_user
 
 import src.config_manager as config_manager
-import src.user_mgmt.datastore as datastore
+import src.user_mgmt.controller as controller
 import src.user_mgmt.model as model
 
 
@@ -21,14 +22,40 @@ def register_post():
     if config.get('USER_REGISTRATION_ENABLED'):
         email = request.form.get('email')
         password = request.form.get('password')
-        user = model.User(email, password)
-        data_store = datastore.UserDataStore(config)
+        user_manager = current_app.user_manager
+        user_mgmt_controller = controller.UserMgmtController(user_manager)
         try:
-            data_store.add_user(user)
+            user_mgmt_controller.register_user(email, password)
             return f'User {email} was added!'
-        except datastore.DuplicateEmailError:
+        except model.DuplicateUserError:
             return f'User {email} is already registered', 400
     return "Registrations are closed!", 400
+
+
+
+@blueprint.route('/login', methods=['GET'])
+def login_view():
+    return render_template('login.html')
+
+
+@blueprint.route('/login', methods=['POST'])
+def login_post():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    user_manager = current_app.user_manager
+    user_mgmt_controller = controller.UserMgmtController(user_manager)
+    try:
+        user_mgmt_controller.login_user(email, password, login_user)
+        return redirect('/')
+    except controller.InvalidCredentialsError:
+        return render_template('login.html', msg='Invalid credentials!')
+
+
+# Temporary endpoint for login testing - will be deleted
+@blueprint.route('/', methods=['GET'])
+@login_required
+def protected_resource():
+    return "Congratulations you are logged in!"
 
 
 
