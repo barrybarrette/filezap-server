@@ -5,6 +5,7 @@ import bolt
 bolt.register_task('clear-pyc', ['delete-pyc.src', 'delete-pyc.tests'])
 bolt.register_task('ct', ['clear-pyc', 'conttest'])
 bolt.register_task('cov', ['clear-pyc', 'nose.with-coverage'])
+bolt.register_task('ut', ['clear-pyc', 'nose'])
 
 _PROJECT_ROOT = os.getcwd()
 _SOURCE_CODE_DIR = os.path.join(_PROJECT_ROOT, 'src')

@@ -7,7 +7,7 @@ import src.file_mgmt.model as model
 
 
 
-class TestFileDataStore(unittest.TestCase):
+class TestFileDataStoreBase(unittest.TestCase):
 
     def setUp(self):
         self.dynamodb = DynamoDbDouble()
@@ -15,14 +15,36 @@ class TestFileDataStore(unittest.TestCase):
         self.data_store = datastore.FileDataStore(config, self.dynamodb)
 
 
+
+class TestFileDataStore(TestFileDataStoreBase):
+
     def test_uses_configured_table_name(self):
         self.assertEqual(self.dynamodb.invoked_table, 'the_file_table')
 
 
+
+class TestAddFile(TestFileDataStoreBase):
+
     def test_can_add_file_to_dynamo_db(self):
-        file = model.File('bob', FileDouble())
+        file = model.File('bob', 'a_file.jpg', 'content_id')
         self.data_store.add_file(file)
         self.assertEqual(self.dynamodb.invoked_put_item, file.to_dict())
+
+
+
+class TestGetFile(TestFileDataStoreBase):
+
+    def test_raises_exception_if_file_not_found(self):
+        with self.assertRaises(datastore.FileNotFoundError):
+            self.data_store.get_file('<invalid file id>', 'bob')
+
+
+    def test_can_get_specific_file(self):
+        file_id = 'content_id_2'
+        file = self.data_store.get_file(file_id, 'bob')
+        self.assertEqual(self.dynamodb.invoked_get_key, {'content_id': file_id, 'owner': 'bob'})
+        self.assertEqual(file.content_id, file_id)
+
 
 
     def test_can_get_all_files_for_owner(self):
@@ -39,10 +61,11 @@ class DynamoDbDouble(object):
 
     def __init__(self):
         self._files = [
-            model.File('bob', FileDouble()).to_dict(),
-            model.File('bob', FileDouble()).to_dict()
+            model.File('bob', 'a_file.jpg', 'content_id_1').to_dict(),
+            model.File('bob', 'a_file.png', 'content_id_2').to_dict()
         ]
         self.invoked_put_item = None
+        self.invoked_get_key = None
         self.invoked_table = None
         self.invoked_scan_filter = None
 
@@ -61,12 +84,9 @@ class DynamoDbDouble(object):
         return {'Items': self._files}
 
 
-
-class FileDouble(object):
-
-    def __init__(self):
-        self.filename = 'a_file.jpg'
-
-
-    def read(self):
-        return b'file bytes'
+    def get_item(self, Key):
+        self.invoked_get_key = Key
+        specified_file_id = Key.get('content_id')
+        if specified_file_id == '<invalid file id>':
+            return {}
+        return {'Item': model.File('bob', 'a_file.jpg', specified_file_id).to_dict()}

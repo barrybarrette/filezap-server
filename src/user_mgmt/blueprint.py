@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, current_app
 from flask_login import login_required
 
 import src.config_manager as config_manager
+import src.file_mgmt.content_managers as content_managers
 import src.user_mgmt.controller as controller
 import src.user_mgmt.model as model
 
@@ -24,8 +25,9 @@ def register_post():
         password = request.form.get('password')
         user_manager = current_app.user_manager
         user_mgmt_controller = controller.UserMgmtController(user_manager)
+        content_manager = content_managers.BackBlazeContentManager()
         try:
-            user_mgmt_controller.register_user(username, password)
+            user_mgmt_controller.register_user(username, password, content_manager)
             return redirect('/')
         except model.DuplicateUserError:
             return f'User {username} is already registered', 400
