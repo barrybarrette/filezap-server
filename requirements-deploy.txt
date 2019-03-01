@@ -1,5 +1,2 @@
-boto3==1.9.101
-flask==1.0.2
-flask-login==0.4.1
+-r requirements.txt
 zappa==0.47.1
-requests==2.21.0
