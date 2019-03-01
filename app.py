@@ -1,3 +1,4 @@
+import base64
 from datetime import timedelta
 import os
 
@@ -5,6 +6,7 @@ from flask import Flask, session
 from flask_login import LoginManager
 
 import src.config_manager as config_manager
+import src.user_mgmt.authentication as authentication
 import src.user_mgmt.datastore as datastore
 from src.user_mgmt.model import UserManager
 
@@ -48,5 +50,18 @@ class FileZapServer(Flask):
     def _init_login_manager(self):
         login_manager = LoginManager()
         login_manager.user_callback = self.user_manager.get_user
+        login_manager.request_callback = self._load_user_from_request
         login_manager.init_app(self)
         login_manager.login_view = "/login"
+
+
+    def _load_user_from_request(self, request):
+        auth_string = request.headers.get('Authorization')
+        if auth_string:
+            base64_credentials = auth_string.replace('Basic ', '', 1)
+            credentials = base64.b64decode(base64_credentials).decode()
+            username, password = credentials.split(':')
+            user = self.user_manager.get_user(username)
+            if user and user.password_hash == authentication.hash_password(password, user.salt):
+                user.is_authenticated = True
+                return user
