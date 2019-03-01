@@ -18,6 +18,7 @@ class UserDataStore(object):
         self._table.put_item(Item=user.to_dict())
 
 
-    def get_all_users(self):
-        response = self._table.scan()
-        return [model.User.from_dict(user_dict) for user_dict in response.get('Items')]
+    def get_user(self, username):
+        user_dict = self._table.get_item(Key={'username': username}).get('Item')
+        if user_dict:
+            return model.User.from_dict(user_dict)

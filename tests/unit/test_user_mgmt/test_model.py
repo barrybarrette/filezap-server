@@ -122,23 +122,25 @@ class TestAddUser(TestUserManagerBase):
 
 class TestGetUser(TestUserManagerBase):
 
-    def test_can_get_user_by_username(self):
+    def test_returns_none_if_user_not_added_and_not_in_data_store(self):
+        user = self.user_manager.get_user('<invalid user>')
+        self.assertEqual(self.data_store.invoked_username, '<invalid user>')
+        self.assertIsNone(user)
+
+
+    def test_returns_user_from_data_store_if_not_added_and_adds_it_to_cache(self):
+        user = self.user_manager.get_user('steve')
+        self.assertEqual(user.username, 'steve')
+        self.assertIn('steve', self.user_manager._users)
+
+
+    def test_returns_cached_user_if_already_added(self):
         username = 'bob'
-        user = model.User(username, 'bob_password', b'salt')
-        self.user_manager.add_user(user, self.content_manager)
-        loaded_user = self.user_manager.get_user(username)
-        self.assertIs(loaded_user, user)
-
-
-    def test_can_load_users_from_data_store(self):
-        self.user_manager.load_users()
-        self.assertEqual(self.user_manager.user_count, 2)
-
-
-    def test_loading_users_from_data_store_does_not_try_to_add_them_back_to_data_store(self):
-        self.user_manager.load_users()
-        self.assertIsNone(self.data_store.added_user)
-
+        bob = model.User(username, 'bob_password', b'salt')
+        self.user_manager.add_user(bob, self.content_manager)
+        user = self.user_manager.get_user(username)
+        self.assertIs(user, bob)
+        self.assertIsNone(self.data_store.invoked_username)
 
 
 
@@ -146,17 +148,17 @@ class DataStoreDouble(object):
 
     def __init__(self):
         self.added_user = None
-
-
-    def get_all_users(self):
-        return [
-            model.User('username1', 'password1', b'salt1'),
-            model.User('username2', 'password2', b'salt2')
-        ]
+        self.invoked_username = None
 
 
     def add_user(self, user):
         self.added_user = user
+
+
+    def get_user(self, username):
+        self.invoked_username = username
+        if username != '<invalid user>':
+            return model.User(username, 'a password', b'salt')
 
 
 

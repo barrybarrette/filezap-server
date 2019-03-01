@@ -48,7 +48,7 @@ class UserManager(object):
 
     def __init__(self, user_data_store):
         self._users = {}
-        self._user_data_store = user_data_store
+        self._data_store = user_data_store
 
 
     @property
@@ -57,18 +57,23 @@ class UserManager(object):
 
 
     def get_user(self, username):
-        return self._users.get(username)
+        user = self._users.get(username)
+        if not user:
+            user = self._get_user_from_data_store(username)
+        return user
+
+
+    def _get_user_from_data_store(self, username):
+        user = self._data_store.get_user(username)
+        if user:
+            self._users[username] = user
+        return user
 
 
     def add_user(self, user, content_manager):
         self._do_add_user(user)
         content_manager.generate_credentials(user)
-        self._user_data_store.add_user(user)
-
-
-    # TODO: Don't load users all at once, do it when a call to get_user() would have returned None
-    def load_users(self):
-        [self._do_add_user(user) for user in self._user_data_store.get_all_users()]
+        self._data_store.add_user(user)
 
 
     def _do_add_user(self, user):

@@ -21,7 +21,9 @@ def register_view():
 @blueprint.route('/register', methods=['POST'])
 def register_post():
     if config.get('USER_REGISTRATION_ENABLED'):
-        username = request.form.get('username')
+        username = request.form.get('username').strip().lower()
+        if not username.isalpha():
+            return render_template('register.html', msg=f'Invalid username. Enter only letters, no numbers or symbols')
         password = request.form.get('password')
         user_manager = current_app.user_manager
         user_mgmt_controller = controller.UserMgmtController(user_manager)
@@ -36,8 +38,8 @@ def register_post():
 
 
 @blueprint.route('/login', methods=['GET'])
-def login_view():
-    return render_template('login.html')
+def login_view(msg=None):
+    return render_template('login.html', msg=msg)
 
 
 @blueprint.route('/login', methods=['POST'])
