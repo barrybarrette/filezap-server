@@ -5,6 +5,10 @@ class FileMgmtController(object):
         self._content_manager = content_manager
 
 
+    def get_files(self, username):
+        return self._data_store.get_files(username)
+
+
     def get_file(self, file_id, user):
         file = self._get_file(file_id, user.username)
         file.content = self._content_manager.get_content(file_id, user.content_credentials)

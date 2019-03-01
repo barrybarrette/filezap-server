@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FileZap</title>
+</head>
+<body>
+<a href="/logout">Log out</a><br>
+<h1>{{username}}'s Files:</h1>
+{% if files %}
+<ul>
+{% for file in files %}
+  <li><a href="/get_file?contentId={{file.content_id}}">{{file.filename}}</a></li>
+{% endfor %}
+</ul>
+{% else %}
+<h3>It looks like you haven't uploaded anything yet. Grab the app <a href="#">here!</a></h3>
+{% endif %}
+</body>
+</html>

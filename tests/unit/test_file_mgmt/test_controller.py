@@ -4,7 +4,7 @@ import unittest
 import src.file_mgmt.controller as controller
 
 
-class TestGetFile(unittest.TestCase):
+class TestFileMgmtControllerBase(unittest.TestCase):
 
     def setUp(self):
         self.file_id = 'some_id'
@@ -12,6 +12,37 @@ class TestGetFile(unittest.TestCase):
         self.data_store = DataStoreDouble()
         self.content_manager = ContentManagerDouble()
         self.controller = controller.FileMgmtController(self.data_store, self.content_manager)
+
+
+
+
+class TestGetFiles(TestFileMgmtControllerBase):
+
+    def setUp(self):
+        super(TestGetFiles, self).setUp()
+        self.files = self.controller.get_files('steve')
+
+
+    def test_invokes_data_store(self):
+        self.assertEqual(self.data_store.invoked_username, 'steve')
+
+
+    def test_returns_empty_list_if_user_has_no_files(self):
+        self.assertEqual(self.files, [])
+
+
+    def test_returns_files_for_user(self):
+        self.data_store.files = ['file1', 'file2']
+        files = self.controller.get_files('steve')
+        self.assertEqual(files, ['file1', 'file2'])
+
+
+
+
+class TestGetFile(TestFileMgmtControllerBase):
+
+    def setUp(self):
+        super(TestGetFile, self).setUp()
         self.file = self.controller.get_file(self.file_id, self.user)
 
 
@@ -58,6 +89,12 @@ class DataStoreDouble(object):
     def __init__(self):
         self.invoked_file_id = None
         self.invoked_username = None
+        self.files = []
+
+
+    def get_files(self, username):
+        self.invoked_username = username
+        return self.files
 
 
     def get_file(self, file_id, username):

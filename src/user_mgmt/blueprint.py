@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, current_app
-from flask_login import login_required
+from flask_login import login_required, logout_user, current_user
 
 import src.config_manager as config_manager
 import src.file_mgmt.content_managers as content_managers
@@ -30,7 +30,7 @@ def register_post():
             user_mgmt_controller.register_user(username, password, content_manager)
             return redirect('/')
         except model.DuplicateUserError:
-            return f'User {username} is already registered', 400
+            return render_template('register.html', msg=f'User {username} is already registered')
     return "Registrations are closed!", 400
 
 
@@ -53,11 +53,12 @@ def login_post():
         return render_template('login.html', msg='Invalid credentials!')
 
 
-# Temporary endpoint for login testing - will be deleted
-@blueprint.route('/', methods=['GET'])
+@blueprint.route('/logout', methods=['GET'])
 @login_required
-def protected_resource():
-    return "Congratulations you are logged in!"
+def logout():
+    current_user.is_authenticated = False
+    logout_user()
+    return render_template('login.html', msg='You have been logged out.')
 
 
 
