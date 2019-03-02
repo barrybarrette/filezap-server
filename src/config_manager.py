@@ -18,7 +18,7 @@ def _get_file_db_table():
 
 
 def _get_user_registration_enabled():
-    return False if _is_production_environment() else True
+    return os.environ.get('USER_REGISTRATION_ENABLED') == 'True'
 
 
 def _is_production_environment():

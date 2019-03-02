@@ -20,13 +20,13 @@ class TestConfigManager(unittest.TestCase):
         os.environ.pop('FILEZAP_ENV')
 
 
-    def test_user_registration_is_enabled_by_default(self):
-        config = config_manager.get_config()
-        self.assertEqual(config.get('USER_REGISTRATION_ENABLED'), True)
-
-
-    def test_user_registration_is_disabled_in_prod(self):
-        os.environ['FILEZAP_ENV'] = config_manager.PROD_ENV
+    def test_user_registration_is_disabled_by_default(self):
         config = config_manager.get_config()
         self.assertEqual(config.get('USER_REGISTRATION_ENABLED'), False)
-        os.environ.pop('FILEZAP_ENV')
+
+
+    def test_user_registration_is_enabled_by_environment_variable(self):
+        os.environ['USER_REGISTRATION_ENABLED'] = 'True'
+        config = config_manager.get_config()
+        self.assertEqual(config.get('USER_REGISTRATION_ENABLED'), True)
+        os.environ.pop('USER_REGISTRATION_ENABLED')
