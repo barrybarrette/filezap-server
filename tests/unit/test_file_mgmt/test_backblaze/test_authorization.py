@@ -88,7 +88,7 @@ class TestCreateUserCredentials(unittest.TestCase):
     def test_request_sends_required_json_data(self):
         expected_json = {
             "accountId": "account_id",
-            "capabilities": ["readFiles", "writeFiles"],
+            "capabilities": ["readFiles", "writeFiles", "deleteFiles"],
             "keyName": "filezap-dev-bob",
             "bucketId": "bucket_id",
             "namePrefix": "bob/"

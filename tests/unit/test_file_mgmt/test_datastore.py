@@ -32,6 +32,19 @@ class TestAddFile(TestFileDataStoreBase):
 
 
 
+class TestRemoveFile(TestFileDataStoreBase):
+
+
+    def test_deletes_file_from_dynamo_db(self):
+        content_id = 'content_id_3'
+        owner = 'alice'
+        file = model.File(owner, 'a_file.jpg', content_id)
+        self.data_store.add_file(file)
+        self.data_store.remove_file(content_id, owner)
+        self.assertEqual(self.dynamodb.invoked_delete_key, {'content_id': content_id, 'owner': owner})
+
+
+
 class TestGetFile(TestFileDataStoreBase):
 
     def test_raises_exception_if_file_not_found(self):
@@ -40,10 +53,10 @@ class TestGetFile(TestFileDataStoreBase):
 
 
     def test_can_get_specific_file(self):
-        file_id = 'content_id_2'
-        file = self.data_store.get_file(file_id, 'bob')
-        self.assertEqual(self.dynamodb.invoked_get_key, {'content_id': file_id, 'owner': 'bob'})
-        self.assertEqual(file.content_id, file_id)
+        content_id = 'content_id_2'
+        file = self.data_store.get_file(content_id, 'bob')
+        self.assertEqual(self.dynamodb.invoked_get_key, {'content_id': content_id, 'owner': 'bob'})
+        self.assertEqual(file.content_id, content_id)
 
 
 
@@ -66,6 +79,7 @@ class DynamoDbDouble(object):
         ]
         self.invoked_put_item = None
         self.invoked_get_key = None
+        self.invoked_delete_key = None
         self.invoked_table = None
         self.invoked_scan_filter = None
 
@@ -90,3 +104,7 @@ class DynamoDbDouble(object):
         if specified_file_id == '<invalid file id>':
             return {}
         return {'Item': model.File('bob', 'a_file.jpg', specified_file_id).to_dict()}
+
+
+    def delete_item(self, Key):
+        self.invoked_delete_key = Key

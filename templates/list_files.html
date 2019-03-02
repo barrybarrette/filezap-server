@@ -10,7 +10,7 @@
 {% if files %}
 <ul>
 {% for file in files %}
-  <li><a href="/get_file?contentId={{file.content_id}}">{{file.filename}}</a></li>
+  <li><a href="/get_file?contentId={{file.content_id}}">{{file.filename}}</a> <a href="/delete_file?contentId={{file.content_id}}">[X]</a></li>
 {% endfor %}
 </ul>
 {% else %}

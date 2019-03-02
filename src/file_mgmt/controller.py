@@ -9,19 +9,12 @@ class FileMgmtController(object):
         return self._data_store.get_files(username)
 
 
-    def get_file(self, file_id, user):
-        file = self._get_file(file_id, user.username)
-        file.content = self._content_manager.get_content(file_id, user.content_credentials)
+    def get_file(self, content_id, user):
+        file = self._data_store.get_file(content_id, user.username)
+        file.content = self._content_manager.get_content(content_id, user.content_credentials)
         return file
 
 
-    def _get_file(self, file_id, username):
-        file = self._data_store.get_file(file_id, username)
-        if file.owner != username: raise InvalidOwnerError()
-        return file
-
-
-
-
-class InvalidOwnerError(Exception):
-    pass
+    def delete_file(self, content_id, user):
+        self._content_manager.delete_content(content_id, user.content_credentials)
+        self._data_store.remove_file(content_id, user.username)

@@ -49,7 +49,6 @@ class Authorizer(object):
 
     def _query_auth_api(self, credentials):
         self._build_auth_headers(credentials)
-        #TODO: Set token timeout
         self._api_response = self._requests.get(_AUTH_URL, headers=self._headers)
 
 
@@ -64,7 +63,7 @@ class Authorizer(object):
         create_key_url = f'{authorization.api_url}/{_CREATE_KEY_RELATIVE_URL}'
         post_json = {
             'accountId': os.environ.get(_ENV_ACCOUNT_ID),
-            'capabilities': ['readFiles', 'writeFiles'],
+            'capabilities': ['readFiles', 'writeFiles', 'deleteFiles'],
             'keyName': f'filezap-dev-{username}',
             'bucketId': os.environ.get(_ENV_BUCKET_ID),
             'namePrefix': f'{username}/'

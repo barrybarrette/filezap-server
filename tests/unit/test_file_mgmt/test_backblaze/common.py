@@ -1,6 +1,6 @@
 class RequestsDouble(object):
 
-    def __init__(self, get_response_class, post_response_class=None):
+    def __init__(self, get_response_class=None, post_response_class=None):
         self.get_status_code = 200
         self.post_status_code = 200
         self.invoked_get_url = None
@@ -9,8 +9,8 @@ class RequestsDouble(object):
         self.invoked_post_headers = None
         self.invoked_get_params = None
         self.invoked_post_json = None
-        self._get_response_class = get_response_class
-        self._post_response_class = post_response_class
+        self._get_response_class = get_response_class or ResponseDouble
+        self._post_response_class = post_response_class or ResponseDouble
 
 
     def get(self, url, **kwargs):

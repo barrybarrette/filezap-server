@@ -17,8 +17,12 @@ class FileDataStore(object):
         self._table.put_item(Item=file.to_dict())
 
 
-    def get_file(self, file_id, owner):
-        lookup_key = {'content_id': file_id, 'owner': owner}
+    def remove_file(self, content_id, owner):
+        self._table.delete_item(Key={'content_id': content_id, 'owner': owner})
+
+
+    def get_file(self, content_id, owner):
+        lookup_key = {'content_id': content_id, 'owner': owner}
         file_dict = self._table.get_item(Key=lookup_key).get('Item')
         if not file_dict: raise FileNotFoundError()
         return model.File.from_dict(file_dict)

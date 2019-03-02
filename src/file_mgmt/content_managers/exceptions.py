@@ -4,6 +4,6 @@ class ContentManagerAuthorizationError(Exception):
     """
     pass
 
-#TODO: Implement raising ContentNotFoundError for b2
+
 class ContentNotFoundError(Exception):
     pass
