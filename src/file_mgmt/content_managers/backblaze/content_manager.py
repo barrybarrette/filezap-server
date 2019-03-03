@@ -68,5 +68,6 @@ class ContentManager(object):
         delete_url = f'{authorization.api_url}/{_DELETE_RELATIVE_URL}'
         headers = {'Authorization': authorization.token}
         json = {'fileId': content_id, 'fileName': filename}
-        r = self._requests.post(delete_url, headers=headers, json=json)
-        pass
+        self._requests.post(delete_url, headers=headers, json=json)
+
+
