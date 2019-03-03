@@ -18,3 +18,8 @@ class FileMgmtController(object):
     def delete_file(self, content_id, user):
         self._content_manager.delete_content(content_id, user.content_credentials)
         self._data_store.remove_file(content_id, user.username)
+
+
+    def save_file(self, file, user):
+        #TODO: Implement save_file
+        pass

@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import Blueprint, request, send_file, render_template, redirect
+from flask import Blueprint, request, send_file, render_template, redirect, jsonify
 from flask_login import login_required, current_user
 
 import src.config_manager as config_manager
@@ -11,8 +11,6 @@ import src.file_mgmt.content_managers.backblaze.content_manager as b2_content_ma
 
 
 blueprint = Blueprint(__name__, 'file_mgmt')
-config = config_manager.get_config()
-
 
 
 @blueprint.route('/', methods=['GET'])
@@ -54,8 +52,25 @@ def delete_file():
 
 
 
+@blueprint.route('/save_file', methods=['POST'])
+@login_required
+def save_file():
+    file = request.files.get('file')
+    ctrl = _get_controller()
+    ctrl.save_file(file, current_user)
+    return "OK", 200
+
+
+
+@blueprint.route('/max_file_size', methods=['GET'])
+def get_max_file_size():
+    config = config_manager.get_config()
+    return jsonify({'maxBytes': config.get('FILEZAP_MAX_FILE_SIZE')})
+
+
 
 def _get_controller():
+    config = config_manager.get_config()
     data_store = datastore.FileDataStore(config)
     content_manager = b2_content_manager.ContentManager()
     return controller.FileMgmtController(data_store, content_manager)

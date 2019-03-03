@@ -30,3 +30,15 @@ class TestConfigManager(unittest.TestCase):
         config = config_manager.get_config()
         self.assertEqual(config.get('USER_REGISTRATION_ENABLED'), True)
         os.environ.pop('USER_REGISTRATION_ENABLED')
+
+
+    def test_max_file_size_defaults_to_zero(self):
+        config = config_manager.get_config()
+        self.assertEqual(config.get('FILEZAP_MAX_FILE_SIZE'), 0)
+
+
+    def test_max_file_size_is_configured_by_environment_variable(self):
+        os.environ['FILEZAP_MAX_FILE_SIZE'] = '4000000'
+        config = config_manager.get_config()
+        self.assertEqual(config.get('FILEZAP_MAX_FILE_SIZE'), 4000000)
+        os.environ.pop('FILEZAP_MAX_FILE_SIZE')
