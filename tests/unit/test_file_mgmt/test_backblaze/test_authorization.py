@@ -9,20 +9,19 @@ import tests.unit.test_file_mgmt.test_backblaze.common as common
 
 
 
-class TestAuthorize(unittest.TestCase):
+class TestAuthorizeApi(unittest.TestCase):
 
     def setUp(self):
-        self.requests = common.RequestsDouble(GetResponseDouble)
+        self.requests = common.RequestsDouble(AuthorizeApiResponseDouble)
         self.authorizer = authorization.Authorizer(self.requests)
         self.credentials = 'app_id:secret_key'
-        self.authorize_response = self.authorizer.authorize(self.credentials)
+        self.authorize_response = self.authorizer.authorize_api(self.credentials)
 
 
-    def test_request_invokes_correct_url(self):
-        self.assertEqual(self.requests.invoked_get_url, authorization._AUTH_URL)
+    def test_request_invokes_authorize_api(self):
+        expected_url = authorization._AUTH_URL
+        self.assertEqual(self.requests.invoked_get_url, expected_url)
 
-
-    def test_request_sends_authorization_header(self):
         expected_headers = {'Authorization': f'Basic {as_base_64("app_id:secret_key")}'}
         self.assertEqual(self.requests.invoked_get_headers, expected_headers)
 
@@ -30,7 +29,7 @@ class TestAuthorize(unittest.TestCase):
     def test_raises_exception_if_bad_status_code_received(self):
         self.requests.get_status_code = "<anything that isn't 200>"
         with self.assertRaises(exceptions.ContentManagerAuthorizationError):
-            self.authorizer.authorize(self.credentials)
+            self.authorizer.authorize_api(self.credentials)
 
 
     def test_returns_response_data_on_success(self):
@@ -40,12 +39,46 @@ class TestAuthorize(unittest.TestCase):
 
 
 
+class TestAuthorizeUpload(unittest.TestCase):
+
+    def setUp(self):
+        self.requests = common.RequestsDouble(AuthorizeUploadResponseDouble)
+        self.authorizer = authorization.Authorizer(self.requests)
+        self.credentials = 'app_id:secret_key'
+        self.api_authorization = self.authorizer.authorize_api(self.credentials)
+        self.requests.invoked_get_url = None
+        self.requests.invoked_get_headers = None
+        os.environ[authorization._ENV_BUCKET_ID] = 'bucket_id'
+        self.authorize_response = self.authorizer.authorize_upload(self.api_authorization)
+
+
+    def tearDown(self):
+        os.environ.pop(authorization._ENV_BUCKET_ID)
+
+
+    def test_request_invokes_authorize_upload_api(self):
+        expected_url = f'{self.api_authorization.api_url}/{authorization._UPLOAD_AUTH_RELATIVE_URL}'
+        self.assertEqual(self.requests.invoked_get_url, expected_url)
+
+        expected_headers = {'Authorization': self.api_authorization.token}
+        self.assertEqual(self.requests.invoked_get_headers, expected_headers)
+
+        expected_params = {'bucketId': 'bucket_id'}
+        self.assertEqual(self.requests.invoked_get_params, expected_params)
+
+
+    def test_returns_upload_authorization(self):
+        self.assertEqual(self.authorize_response.upload_url, 'https://upload.example.com')
+        self.assertEqual(self.authorize_response.token, 'an-upload-token')
+
+
+
 
 class TestCreateUserCredentials(unittest.TestCase):
 
     def setUp(self):
         self.setUpEnv()
-        self.requests = common.RequestsDouble(GetResponseDouble, PostResponseDouble)
+        self.requests = common.RequestsDouble(AuthorizeApiResponseDouble, PostResponseDouble)
         self.authorizer = authorization.Authorizer(self.requests)
         self.credentials = self.authorizer.create_user_credentials('bob')
 
@@ -113,7 +146,7 @@ def as_base_64(auth_string):
 
 
 
-class GetResponseDouble(common.ResponseDouble):
+class AuthorizeApiResponseDouble(common.ResponseDouble):
 
     def json(self):
         return {
@@ -131,6 +164,17 @@ class GetResponseDouble(common.ResponseDouble):
             "authorizationToken": "a-token",
             "downloadUrl": "https://f002.example.com",
             "recommendedPartSize": 100000000
+        }
+
+
+
+
+class AuthorizeUploadResponseDouble(common.ResponseDouble):
+
+    def json(self):
+        return {
+            'uploadUrl': 'https://upload.example.com',
+            'authorizationToken': 'an-upload-token'
         }
 
 

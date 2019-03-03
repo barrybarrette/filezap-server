@@ -7,3 +7,7 @@ class ContentManagerAuthorizationError(Exception):
 
 class ContentNotFoundError(Exception):
     pass
+
+
+class ContentUploadFailedError(Exception):
+    pass

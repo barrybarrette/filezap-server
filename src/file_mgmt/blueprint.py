@@ -4,10 +4,10 @@ from flask import Blueprint, request, send_file, render_template, redirect, json
 from flask_login import login_required, current_user
 
 import src.config_manager as config_manager
+import src.file_mgmt.content_managers.exceptions as content_manager_exceptions
+from .content_managers import BackBlazeContentManager
 import src.file_mgmt.controller as controller
 import src.file_mgmt.datastore as datastore
-import src.file_mgmt.content_managers.exceptions as content_manager_exceptions
-import src.file_mgmt.content_managers.backblaze.content_manager as b2_content_manager
 
 
 blueprint = Blueprint(__name__, 'file_mgmt')
@@ -72,7 +72,8 @@ def get_max_file_size():
 def _get_controller():
     config = config_manager.get_config()
     data_store = datastore.FileDataStore(config)
-    content_manager = b2_content_manager.ContentManager()
+    #TODO (Future): Implement logic to use configurable content managers
+    content_manager = BackBlazeContentManager()
     return controller.FileMgmtController(data_store, content_manager)
 
 

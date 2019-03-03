@@ -9,6 +9,7 @@ class RequestsDouble(object):
         self.invoked_post_headers = None
         self.invoked_get_params = None
         self.invoked_post_json = None
+        self.invoked_post_data = None
         self._get_response_class = get_response_class or ResponseDouble
         self._post_response_class = post_response_class or ResponseDouble
 
@@ -24,6 +25,7 @@ class RequestsDouble(object):
         self.invoked_post_url = url
         self.invoked_post_headers = kwargs.get('headers')
         self.invoked_post_json = kwargs.get('json')
+        self.invoked_post_data = kwargs.get('data')
         return self._post_response_class(self.post_status_code)
 
 

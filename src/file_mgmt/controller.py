@@ -1,3 +1,6 @@
+from .model import File
+
+
 class FileMgmtController(object):
 
     def __init__(self, data_store, content_manager):
@@ -20,6 +23,7 @@ class FileMgmtController(object):
         self._data_store.remove_file(content_id, user.username)
 
 
-    def save_file(self, file, user):
-        #TODO: Implement save_file
-        pass
+    def save_file(self, raw_file, user):
+        content_id = self._content_manager.upload_content(raw_file, user)
+        file = File(user.username, raw_file.filename, content_id)
+        self._data_store.add_file(file)

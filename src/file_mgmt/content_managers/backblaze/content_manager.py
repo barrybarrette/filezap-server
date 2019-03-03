@@ -1,5 +1,8 @@
+import hashlib
+import urllib
+
 from .authorization import Authorizer
-from ..exceptions import ContentNotFoundError
+from ..exceptions import ContentNotFoundError, ContentUploadFailedError
 
 
 _API_PREFIX = 'b2api/v2'
@@ -26,7 +29,7 @@ class ContentManager(object):
 
 
     def get_content(self, content_id, credentials):
-        authorization = self._authorizer.authorize(credentials)
+        authorization = self._authorizer.authorize_api(credentials)
         response = self._download_content(authorization, content_id)
         return response.content
 
@@ -39,9 +42,16 @@ class ContentManager(object):
         Since FileZap doesn't know or care how a content manager stores
         a filename, we retrieve it from the BackBlaze API
         """
-        authorization = self._authorizer.authorize(credentials)
+        authorization = self._authorizer.authorize_api(credentials)
         filename = self._get_filename(authorization, content_id)
         self._invoke_api_delete(authorization, content_id, filename)
+
+
+    def upload_content(self, file, user):
+        api_authorization = self._authorizer.authorize_api(user.content_credentials)
+        upload_authorization = self._authorizer.authorize_upload(api_authorization)
+        content_id = self._upload_file(upload_authorization, file, user.username)
+        return content_id
 
 
     def _download_content(self, authorization, content_id):
@@ -58,6 +68,13 @@ class ContentManager(object):
         return response.json().get('fileName')
 
 
+    def _upload_file(self, authorization, file, username):
+        response = self._invoke_api_post(authorization, file, username)
+        if response.status_code != 200:
+            raise ContentUploadFailedError()
+        return response.json().get('fileId')
+
+
     def _invoke_api_get(self, url, authorization, content_id):
         headers = {'Authorization': authorization.token}
         params = {'fileId': content_id}
@@ -71,3 +88,14 @@ class ContentManager(object):
         self._requests.post(delete_url, headers=headers, json=json)
 
 
+    def _invoke_api_post(self, authorization, file, username):
+        file_content = file.read()
+        encoded_filename = urllib.parse.quote_plus(file.filename)
+        headers = {
+            'Authorization': authorization.token,
+            'X-Bz-File-Name': f'{username}/{encoded_filename}',
+            'Content-Type': file.mimetype,
+            'Content-Length': str(len(file_content)),
+            'X-Bz-Content-Sha1': hashlib.sha1(file_content).hexdigest()
+        }
+        return self._requests.post(authorization.upload_url, headers=headers, data=file_content)

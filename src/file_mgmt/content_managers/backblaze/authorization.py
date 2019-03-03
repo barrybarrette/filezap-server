@@ -16,6 +16,7 @@ _AUTH_DURATION_SECONDS = 30
 
 _AUTH_URL = 'https://api.backblazeb2.com/b2api/v2/b2_authorize_account'
 _CREATE_KEY_RELATIVE_URL = 'b2api/v2/b2_create_key'
+_UPLOAD_AUTH_RELATIVE_URL = 'b2api/v2/b2_get_upload_url'
 
 
 
@@ -32,16 +33,25 @@ class Authorizer(object):
         self._requests = requests_lib
 
 
-    def authorize(self, credentials):
+    def authorize_api(self, credentials):
         self._query_auth_api(credentials)
         if self._api_response.status_code != 200:
             raise BackBlazeAuthorizationError(credentials)
         return self._make_authorize_response(self._api_response.json())
 
 
+    def authorize_upload(self, api_authorization):
+        authorize_upload_url = f'{api_authorization.api_url}/{_UPLOAD_AUTH_RELATIVE_URL}'
+        headers = {'Authorization': api_authorization.token}
+        params = {'bucketId': os.environ.get(_ENV_BUCKET_ID)}
+        response = self._requests.get(authorize_upload_url, headers=headers, params=params)
+        response_json = response.json()
+        return _UploadAuthorization(response_json.get('uploadUrl'), response_json.get('authorizationToken'))
+
+
     def create_user_credentials(self, username):
         master_credentials = f'{os.environ.get(_ENV_MASTER_APP_ID)}:{os.environ.get(_ENV_MASTER_SECRET_KEY)}'
-        authorization = self.authorize(master_credentials)
+        authorization = self.authorize_api(master_credentials)
         self._generate_key(authorization, username)
         response_data = self._api_response.json()
         return f'{response_data.get("applicationKeyId")}:{response_data.get("applicationKey")}'
@@ -85,3 +95,4 @@ class Authorizer(object):
 
 
 _Authorization = namedtuple('Authorization', ['api_url', 'download_url', 'token'])
+_UploadAuthorization = namedtuple('UploadAuthorization', ['upload_url', 'token'])

@@ -84,10 +84,39 @@ class TestDeleteFile(TestFileMgmtControllerBase):
         self.data_store.invoked_content_id = None # Clear the invocation from setUp
         self.data_store.invoked_username = None   # Clear the invocation from setUp
         self.content_manager.should_raise = True
-        with self.assertRaises(DummyException):
+        with self.assertRaises(ExceptionDummy):
             self.controller.delete_file(self.content_id, self.user)
         self.assertIsNone(self.data_store.invoked_content_id)
         self.assertIsNone(self.data_store.invoked_username)
+
+
+
+
+class TestSaveFile(TestFileMgmtControllerBase):
+
+    def setUp(self):
+        super(TestSaveFile, self).setUp()
+        self.file = RawFileDouble()
+        self.controller.save_file(self.file, self.user)
+
+
+    def test_invokes_content_manager(self):
+        self.assertIs(self.content_manager.invoked_file, self.file)
+        self.assertIs(self.content_manager.invoked_user, self.user)
+
+
+    def test_invokes_data_store(self):
+        self.assertEqual(self.data_store.invoked_file.owner, self.user.username)
+        self.assertEqual(self.data_store.invoked_file.filename, self.file.filename)
+        self.assertEqual(self.data_store.invoked_file.content_id, 'a-new-content-id')
+
+
+    def test_does_not_invoke_data_store_if_content_manager_raises_exception(self):
+        self.data_store.invoked_file = None # Clear invocation from setUp
+        self.content_manager.should_raise = True
+        with self.assertRaises(ExceptionDummy):
+            self.controller.save_file(self.file, self.user)
+        self.assertIsNone(self.data_store.invoked_file)
 
 
 
@@ -100,6 +129,8 @@ class ContentManagerDouble(object):
     def __init__(self):
         self.invoked_content_id = None
         self.invoked_credentials = None
+        self.invoked_file = None
+        self.invoked_user = None
         self.should_raise = False
 
 
@@ -113,7 +144,18 @@ class ContentManagerDouble(object):
         self.invoked_content_id = content_id
         self.invoked_credentials = credentials
         if self.should_raise:
-            raise DummyException()
+            raise ExceptionDummy()
+
+
+    def upload_content(self, file, user):
+        self.invoked_file = file
+        self.invoked_user = user
+        if self.should_raise:
+            raise ExceptionDummy()
+        return 'a-new-content-id'
+
+
+
 
 
 
@@ -122,6 +164,7 @@ class DataStoreDouble(object):
     def __init__(self):
         self.invoked_content_id = None
         self.invoked_username = None
+        self.invoked_file = None
         self.files = []
 
 
@@ -133,7 +176,7 @@ class DataStoreDouble(object):
     def get_file(self, content_id, username):
         self.invoked_content_id = content_id
         self.invoked_username = username
-        return FileDouble(content_id)
+        return FileDummy()
 
 
     def remove_file(self, content_id, username):
@@ -141,18 +184,20 @@ class DataStoreDouble(object):
         self.invoked_username = username
 
 
+    def add_file(self, file):
+        self.invoked_file = file
+
+
+class FileDummy(object):
+    pass
+
+
+class RawFileDouble(object):
+
+    def __init__(self):
+        self.filename = 'file.jpg'
 
 
 
-class FileDouble(object):
-
-    def __init__(self, file_id):
-        self.id = file_id
-        self.owner = 'bob'
-        self.content = None
-
-
-
-
-class DummyException(Exception):
+class ExceptionDummy(Exception):
     pass
