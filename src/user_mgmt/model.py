@@ -1,12 +1,14 @@
 import base64
 
-class User(object):
 
-    def __init__(self, username, password_hash, salt):
+
+class User(object):
+    def __init__(self, username, password_hash, salt, content_credentials=None):
+        self.is_authenticated = False
         self.username = username
         self.password_hash = password_hash
         self.salt = salt
-        self.is_authenticated = False
+        self.content_credentials = content_credentials
 
 
     @property
@@ -27,13 +29,18 @@ class User(object):
         return {
             'username': self.username,
             'password_hash': self.password_hash,
-            'salt': base64.b64encode(self.salt).decode()
+            'salt': base64.b64encode(self.salt).decode(),
+            'content_credentials': self.content_credentials
         }
 
 
     @classmethod
     def from_dict(cls, user_dict):
-        return cls(user_dict.get('username'), user_dict.get('password_hash'), base64.b64decode(user_dict.get('salt')))
+        user = cls(user_dict.get('username'),
+                   user_dict.get('password_hash'),
+                   base64.b64decode(user_dict.get('salt')),
+                   user_dict.get('content_credentials'))
+        return user
 
 
 
@@ -41,7 +48,7 @@ class UserManager(object):
 
     def __init__(self, user_data_store):
         self._users = {}
-        self._user_data_store = user_data_store
+        self._data_store = user_data_store
 
 
     @property
@@ -50,16 +57,23 @@ class UserManager(object):
 
 
     def get_user(self, username):
-        return self._users.get(username)
+        user = self._users.get(username)
+        if not user:
+            user = self._get_user_from_data_store(username)
+        return user
 
 
-    def add_user(self, user):
+    def _get_user_from_data_store(self, username):
+        user = self._data_store.get_user(username)
+        if user:
+            self._users[username] = user
+        return user
+
+
+    def add_user(self, user, content_manager):
         self._do_add_user(user)
-        self._user_data_store.add_user(user)
-
-
-    def load_users(self):
-        [self._do_add_user(user) for user in self._user_data_store.get_all_users()]
+        content_manager.generate_credentials(user)
+        self._data_store.add_user(user)
 
 
     def _do_add_user(self, user):

@@ -20,13 +20,25 @@ class TestConfigManager(unittest.TestCase):
         os.environ.pop('FILEZAP_ENV')
 
 
-    def test_user_registration_is_enabled_by_default(self):
-        config = config_manager.get_config()
-        self.assertEqual(config.get('USER_REGISTRATION_ENABLED'), True)
-
-
-    def test_user_registration_is_disabled_in_prod(self):
-        os.environ['FILEZAP_ENV'] = config_manager.PROD_ENV
+    def test_user_registration_is_disabled_by_default(self):
         config = config_manager.get_config()
         self.assertEqual(config.get('USER_REGISTRATION_ENABLED'), False)
-        os.environ.pop('FILEZAP_ENV')
+
+
+    def test_user_registration_is_enabled_by_environment_variable(self):
+        os.environ['USER_REGISTRATION_ENABLED'] = 'True'
+        config = config_manager.get_config()
+        self.assertEqual(config.get('USER_REGISTRATION_ENABLED'), True)
+        os.environ.pop('USER_REGISTRATION_ENABLED')
+
+
+    def test_max_file_size_defaults_to_zero(self):
+        config = config_manager.get_config()
+        self.assertEqual(config.get('FILEZAP_MAX_FILE_SIZE'), 0)
+
+
+    def test_max_file_size_is_configured_by_environment_variable(self):
+        os.environ['FILEZAP_MAX_FILE_SIZE'] = '4000000'
+        config = config_manager.get_config()
+        self.assertEqual(config.get('FILEZAP_MAX_FILE_SIZE'), 4000000)
+        os.environ.pop('FILEZAP_MAX_FILE_SIZE')

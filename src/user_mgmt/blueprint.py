@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, current_app
-from flask_login import login_required
+from flask_login import login_required, logout_user, current_user
 
 import src.config_manager as config_manager
+import src.file_mgmt.content_managers as content_managers
 import src.user_mgmt.controller as controller
 import src.user_mgmt.model as model
 
@@ -20,22 +21,25 @@ def register_view():
 @blueprint.route('/register', methods=['POST'])
 def register_post():
     if config.get('USER_REGISTRATION_ENABLED'):
-        username = request.form.get('username')
+        username = request.form.get('username').strip().lower()
+        if not username.isalpha():
+            return render_template('register.html', msg=f'Invalid username. Enter only letters, no numbers or symbols')
         password = request.form.get('password')
         user_manager = current_app.user_manager
         user_mgmt_controller = controller.UserMgmtController(user_manager)
+        content_manager = content_managers.BackBlazeContentManager()
         try:
-            user_mgmt_controller.register_user(username, password)
+            user_mgmt_controller.register_user(username, password, content_manager)
             return redirect('/')
         except model.DuplicateUserError:
-            return f'User {username} is already registered', 400
+            return render_template('register.html', msg=f'User {username} is already registered')
     return "Registrations are closed!", 400
 
 
 
 @blueprint.route('/login', methods=['GET'])
-def login_view():
-    return render_template('login.html')
+def login_view(msg=None):
+    return render_template('login.html', msg=msg)
 
 
 @blueprint.route('/login', methods=['POST'])
@@ -51,11 +55,12 @@ def login_post():
         return render_template('login.html', msg='Invalid credentials!')
 
 
-# Temporary endpoint for login testing - will be deleted
-@blueprint.route('/', methods=['GET'])
+@blueprint.route('/logout', methods=['GET'])
 @login_required
-def protected_resource():
-    return "Congratulations you are logged in!"
+def logout():
+    current_user.is_authenticated = False
+    logout_user()
+    return render_template('login.html', msg='You have been logged out.')
 
 
 

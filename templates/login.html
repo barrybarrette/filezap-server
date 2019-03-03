@@ -5,12 +5,14 @@
     <title>FileZap Login</title>
 </head>
 <body>
-<form method="post">
+<form method="post" action="/login">
     Username:<input type="text" name="username"><br>
     Password:<input type="password" name="password"><br>
     <input type="submit">
 </form>
 New user? Register <a href="/register">here</a><br>
-{{msg}}
+{% if msg %}
+<h5>{{msg}}</h5>
+{% endif %}
 </body>
 </html>

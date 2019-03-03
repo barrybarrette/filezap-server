@@ -17,6 +17,22 @@ class FileDataStore(object):
         self._table.put_item(Item=file.to_dict())
 
 
+    def remove_file(self, content_id, owner):
+        self._table.delete_item(Key={'content_id': content_id, 'owner': owner})
+
+
+    def get_file(self, content_id, owner):
+        lookup_key = {'content_id': content_id, 'owner': owner}
+        file_dict = self._table.get_item(Key=lookup_key).get('Item')
+        if not file_dict: raise FileNotFoundError()
+        return model.File.from_dict(file_dict)
+
+
     def get_files(self, owner):
         response = self._table.scan(FilterExpression=Attr('owner').eq(owner))
         return [model.File.from_dict(file_dict) for file_dict in response.get('Items')]
+
+
+
+class FileNotFoundError(Exception):
+    pass

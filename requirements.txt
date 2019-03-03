@@ -1,0 +1,4 @@
+-r requirements-unittest.txt
+flask==1.0.2
+flask-login==0.4.1
+requests==2.21.0

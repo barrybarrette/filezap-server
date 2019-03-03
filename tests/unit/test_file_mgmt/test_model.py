@@ -9,13 +9,13 @@ class TestFile(unittest.TestCase):
 
     def setUp(self):
         self.owner = 'bob'
-        self.native_file_object = NativeFileObjectDouble()
-        self.file = FileSpy(self.owner, self.native_file_object)
+        self.filename = 'a_file.jpg'
+        self.content_id = 'file_id'
+        self.file = FileSpy(self.owner, self.filename, self.content_id)
 
 
     def test_uses_specified_attributes(self):
         self.assertEqual(self.file.owner, 'bob')
-        self.assertIs(self.file.bytes, self.native_file_object.read())
         self.assertEqual(self.file.filename, 'a_file.jpg')
 
 
@@ -23,12 +23,16 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.file.created_at, FileSpy.now)
 
 
+    def test_sets_content_to_none(self):
+        self.assertIsNone(self.file.content)
+
+
     def test_to_dict(self):
         expected = {
-            'owner': 'bob',
-            'filename': 'a_file.jpg',
+            'owner': self.owner,
+            'filename': self.filename,
             'created_at': FileSpy.now.strftime(model.DATE_FORMAT),
-            'bytes': self.native_file_object.read()
+            'content_id': self.content_id
         }
         self.assertEqual(self.file.to_dict(), expected)
 
@@ -36,26 +40,19 @@ class TestFile(unittest.TestCase):
     def test_from_dict(self):
         created_at = datetime(2017, 9, 15)
         file_dict = {
-            'owner': 'bob',
-            'filename': 'a_file.jpg',
+            'owner': self.owner,
+            'filename': self.filename,
             'created_at': created_at.strftime(model.DATE_FORMAT),
-            'bytes': self.native_file_object.read()
+            'content_id': self.content_id
         }
         file = FileSpy.from_dict(file_dict)
-        self.assertEqual(file.owner, 'bob')
-        self.assertEqual(file.filename, 'a_file.jpg')
+        self.assertEqual(file.owner, self.owner)
+        self.assertEqual(file.filename, self.filename)
         self.assertEqual(file.created_at, created_at)
-        self.assertEqual(file.bytes, self.native_file_object.read())
+        self.assertEqual(file.content_id, self.content_id)
 
 
-class NativeFileObjectDouble(object):
 
-    def __init__(self):
-        self.filename = 'a_file.jpg'
-
-
-    def read(self):
-        return b'this is a file and these are some bytes'
 
 
 class FileSpy(model.File):

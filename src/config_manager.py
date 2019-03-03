@@ -5,7 +5,8 @@ def get_config():
     return {
         'FILE_DB_TABLE': _get_file_db_table(),
         'USER_DB_TABLE': _get_user_db_table(),
-        'USER_REGISTRATION_ENABLED': _get_user_registration_enabled()
+        'USER_REGISTRATION_ENABLED': _get_user_registration_enabled(),
+        'FILEZAP_MAX_FILE_SIZE': int(os.environ.get('FILEZAP_MAX_FILE_SIZE', 0))
     }
 
 
@@ -18,7 +19,7 @@ def _get_file_db_table():
 
 
 def _get_user_registration_enabled():
-    return False if _is_production_environment() else True
+    return os.environ.get('USER_REGISTRATION_ENABLED') == 'True'
 
 
 def _is_production_environment():
