@@ -4,4 +4,4 @@
 
 This project is in very early development. The goal is to create a very simple temporary file storage platform that will allow users to send files from their mobile device and then access them via a web browser on any device. This project is the backend service that will handle user management and file storage. 
 
-The Android app is now available: https://play.google.com/store/apps/details?id=com.shredderstudios.filezap
+The Android app is now available on [Google Play](https://play.google.com/store/apps/details?id=com.shredderstudios.filezap)
