@@ -6,6 +6,8 @@ FileZap is a very simple temporary file storage platform that allows users to se
 
 The Android app is now available on [Google Play](https://play.google.com/store/apps/details?id=com.shredderstudios.filezap)
 
+[Release Notes](https://github.com/whitebarry/filezap-server/releases/latest)
+
 # FAQ
 
 **How do I get started?**
