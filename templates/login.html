@@ -2,17 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
     <title>FileZap Login</title>
+    <style>
+        body {
+          background-color: #dddddd;
+        }
+    </style>
 </head>
 <body>
-<form method="post" action="/login">
-    Username:<input type="text" name="username"><br>
-    Password:<input type="password" name="password"><br>
-    <input type="submit">
-</form>
-New user? Register <a href="/register">here</a><br>
-{% if msg %}
-<h5>{{msg}}</h5>
-{% endif %}
+
+
+<div class="container">
+    <form method="post" action="/login">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" class="form-control form-control-lg"><br>
+            <label>Password</label>
+            <input type="password" name="password" class="form-control form-control-lg"><br>
+            <input type="submit" class="btn btn-primary btn-block" value="Login">
+        </div>
+    </form>
+    <div>
+        <center>
+            <h3>New user? Register <a href="/register">here</a></h3><br>
+            {% if msg %}
+            <h5>{{msg}}</h5>
+            {% endif %}
+        </center>
+    </div>
+</div>
+
 </body>
 </html>
