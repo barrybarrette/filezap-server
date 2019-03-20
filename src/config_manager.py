@@ -10,20 +10,21 @@ def get_config():
     }
 
 
+def is_production_environment():
+    return os.environ.get('FILEZAP_ENV') == PROD_ENV
+
+
 def _get_user_db_table():
-    return _PROD_USER_DB_TABLE if _is_production_environment() else _DEV_USER_DB_TABLE
+    return _PROD_USER_DB_TABLE if is_production_environment() else _DEV_USER_DB_TABLE
 
 
 def _get_file_db_table():
-    return _PROD_FILE_DB_TABLE if _is_production_environment() else _DEV_FILE_DB_TABLE
+    return _PROD_FILE_DB_TABLE if is_production_environment() else _DEV_FILE_DB_TABLE
 
 
 def _get_user_registration_enabled():
     return os.environ.get('USER_REGISTRATION_ENABLED') == 'True'
 
-
-def _is_production_environment():
-    return True if os.environ.get('FILEZAP_ENV') == PROD_ENV else False
 
 
 DEV_ENV = 'DEVELOPMENT'
