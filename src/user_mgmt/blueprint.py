@@ -44,7 +44,7 @@ def login_view(msg=None):
 
 @blueprint.route('/login', methods=['POST'])
 def login_post():
-    username = request.form.get('username')
+    username = request.form.get('username').strip().lower()
     password = request.form.get('password')
     user_manager = current_app.user_manager
     user_mgmt_controller = controller.UserMgmtController(user_manager)
