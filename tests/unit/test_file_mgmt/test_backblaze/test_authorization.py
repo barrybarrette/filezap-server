@@ -88,12 +88,16 @@ class TestCreateUserCredentials(unittest.TestCase):
         os.environ[authorization._ENV_BUCKET_ID] = 'bucket_id'
         os.environ[authorization._ENV_MASTER_APP_ID] = 'master app id'
         os.environ[authorization._ENV_MASTER_SECRET_KEY] = 'master secret key'
+        os.environ['FILEZAP_ENV'] = 'PRODUCTION'
 
 
     def tearDown(self):
         os.environ.pop(authorization._ENV_ACCOUNT_ID)
+        os.environ.pop(authorization._ENV_BUCKET_ID)
         os.environ.pop(authorization._ENV_MASTER_APP_ID)
         os.environ.pop(authorization._ENV_MASTER_SECRET_KEY)
+        os.environ.pop('FILEZAP_ENV')
+
 
 
     def test_raises_exception_if_master_authorization_fails(self):
@@ -119,6 +123,19 @@ class TestCreateUserCredentials(unittest.TestCase):
 
 
     def test_request_sends_required_json_data(self):
+        expected_json = {
+            "accountId": "account_id",
+            "capabilities": ["readFiles", "writeFiles", "deleteFiles"],
+            "keyName": "filezap-bob",
+            "bucketId": "bucket_id",
+            "namePrefix": "bob/"
+        }
+        self.assertEqual(self.requests.invoked_post_json, expected_json)
+
+
+    def test_specifies_dev_in_key_name_if_non_prod_environment(self):
+        os.environ['FILEZAP_ENV'] = 'NON PROD'
+        self.authorizer.create_user_credentials('bob')
         expected_json = {
             "accountId": "account_id",
             "capabilities": ["readFiles", "writeFiles", "deleteFiles"],

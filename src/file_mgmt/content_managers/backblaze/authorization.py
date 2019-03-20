@@ -2,7 +2,7 @@ import base64
 from collections import namedtuple
 import os
 
-
+import src.config_manager as config_manager
 from .exceptions import BackBlazeAuthorizationError
 
 
@@ -71,10 +71,11 @@ class Authorizer(object):
 
     def _generate_key(self, authorization, username):
         create_key_url = f'{authorization.api_url}/{_CREATE_KEY_RELATIVE_URL}'
+        key_name = f'filezap-{username}' if config_manager.is_production_environment() else f'filezap-dev-{username}'
         post_json = {
             'accountId': os.environ.get(_ENV_ACCOUNT_ID),
             'capabilities': ['readFiles', 'writeFiles', 'deleteFiles'],
-            'keyName': f'filezap-dev-{username}',
+            'keyName': key_name,
             'bucketId': os.environ.get(_ENV_BUCKET_ID),
             'namePrefix': f'{username}/'
         }
