@@ -26,3 +26,29 @@ Your files will be stored on BackBlaze currently and though this may change in t
 **Is there a size limit?**
 
 At this time there is no size limit per account or per file. However, there is a 4 MB download limit - see [#19](https://github.com/whitebarry/filezap-server/issues/19). Additionally, in the interest of full disclosure, I'm using the BackBlaze free tier which has a 10GB limit, so if I get a sudden influx of active users it will cut off and I'll need to evaluate costs if that happens.
+
+
+
+# Contributing
+**Project setup**
+
+1. [Install Python 3.6](https://www.python.org/downloads/) Other Python versions may work, I am developing on 3.6
+2. Clone this repo: `git clone https://github.com/whitebarry/filezap-server.git && cd filezap-server`
+3. Create a virtual environment: 
+  * Linux: `python3 -m venv venv && source venv/bin/activate`
+  * Windows: `python3 -m venv venv && venv\scripts\activate`
+4. Install dependencies: `pip install -r requirements.txt`
+5. Verify install by running `bolt ut`. This will execute the unit tests and confirm you are set up. While developing, use `bolt ct` to run the unit tests continuously. 
+
+You can start a local server by running `python main.py` from within your virtual environment. However, you will get errors for any actions you take without having the proper environment set up. The following environment variables must be set: 
+
+* AWS_ACCESS_KEY_ID={your aws api key id}
+* AWS_SECRET_ACCESS_KEY={your aws api key secret}
+* BACKBLAZE_ACCOUNT_ID={your backblaze account id}
+* BACKBLAZE_BUCKET_ID={the bucket id on backblaze you want to store files in}
+* BACKBLAZE_MASTER_APP_ID={backblaze api key id that has the createKeys permission}
+* BACKBLAZE_MASTER_SECRET_KEY={backblaze api key secret}
+* USER_REGISTRATION_ENABLED=True
+* FILEZAP_ENV=Production
+ 
+I will be adding detailed instructions on exactly how to get these set up - see [#20](https://github.com/whitebarry/filezap-server/issues/20)
