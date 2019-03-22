@@ -80,9 +80,10 @@ class TestUser(TestUserBase):
 class TestUserManagerBase(unittest.TestCase):
 
     def setUp(self):
-        self.data_store = DataStoreDouble()
+        self.user_data_store = UserDataStoreDouble()
+        self.file_data_store = FileDataStoreDouble()
         self.content_manager = ContentManagerDouble()
-        self.user_manager = model.UserManager(self.data_store)
+        self.user_manager = model.UserManager(self.user_data_store, self.file_data_store)
 
 
 
@@ -102,7 +103,7 @@ class TestAddUser(TestUserManagerBase):
 
 
     def test_can_add_user(self):
-        self.assertIs(self.data_store.added_user, self.user)
+        self.assertIs(self.user_data_store.added_user, self.user)
         self.assertEqual(self.user_manager.user_count, 1)
 
 
@@ -124,7 +125,7 @@ class TestGetUser(TestUserManagerBase):
 
     def test_returns_none_if_user_not_added_and_not_in_data_store(self):
         user = self.user_manager.get_user('<invalid user>')
-        self.assertEqual(self.data_store.invoked_username, '<invalid user>')
+        self.assertEqual(self.user_data_store.invoked_username, '<invalid user>')
         self.assertIsNone(user)
 
 
@@ -140,15 +141,54 @@ class TestGetUser(TestUserManagerBase):
         self.user_manager.add_user(bob, self.content_manager)
         user = self.user_manager.get_user(username)
         self.assertIs(user, bob)
-        self.assertIsNone(self.data_store.invoked_username)
+        self.assertIsNone(self.user_data_store.invoked_username)
 
 
 
-class DataStoreDouble(object):
+
+class TestDeleteUser(TestUserManagerBase):
+
+    def setUp(self):
+        super(TestDeleteUser, self).setUp()
+        self.user = model.User('bob', 'bob_password', b'salt')
+        self.user_manager.add_user(self.user, self.content_manager)
+        self.user_manager.delete_user(self.user, self.content_manager)
+
+
+    def test_gets_user_files_from_data_store(self):
+        self.assertEqual(self.file_data_store.invoked_owner, self.user.username)
+
+
+    def test_deletes_all_user_files_from_content_manager(self):
+        self.assertEqual(self.content_manager.removed_content_ids, ['content_id_1', 'content_id_2'])
+
+
+    def test_deletes_all_user_files_from_data_store(self):
+        self.assertEqual(self.file_data_store.removed_content_ids, ['content_id_1', 'content_id_2'])
+
+
+    def test_revokes_user_credentials_from_content_manager(self):
+        self.assertIs(self.content_manager.revoked_user, self.user)
+
+
+    def test_removes_user_from_data_store(self):
+        self.assertEqual(self.user_data_store.deleted_user, self.user.username)
+
+
+    def test_get_user_returns_none_after_user_is_deleted(self):
+        user = self.user_manager.get_user(self.user.username)
+        self.assertIsNone(user)
+
+
+
+
+
+class UserDataStoreDouble(object):
 
     def __init__(self):
         self.added_user = None
         self.invoked_username = None
+        self.deleted_user = None
 
 
     def add_user(self, user):
@@ -157,15 +197,51 @@ class DataStoreDouble(object):
 
     def get_user(self, username):
         self.invoked_username = username
-        if username != '<invalid user>':
+        if username != '<invalid user>' and self.deleted_user is None:
             return model.User(username, 'a password', b'salt')
+
+
+    def delete_user(self, username):
+        self.deleted_user = username
+
+
+
+class FileDataStoreDouble(object):
+
+    def __init__(self):
+        self.removed_content_ids = []
+        self.invoked_owner = None
+
+
+    def get_files(self, owner):
+        self.invoked_owner = owner
+        return [FileDouble('content_id_1'), FileDouble('content_id_2')]
+
+
+    def remove_file(self, content_id, owner):
+        self.removed_content_ids.append(content_id)
+
 
 
 
 class ContentManagerDouble(object):
 
     def __init__(self):
+        self.removed_content_ids = []
         self.invoked_user = None
+        self.revoked_user = None
 
     def generate_credentials(self, user):
         self.invoked_user = user
+
+    def revoke_credentials(self, user):
+        self.revoked_user = user
+
+    def delete_content(self, content_id, credentials):
+        self.removed_content_ids.append(content_id)
+
+
+class FileDouble(object):
+
+    def __init__(self, content_id):
+        self.content_id = content_id

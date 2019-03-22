@@ -6,8 +6,10 @@ from flask import Flask, session
 from flask_login import LoginManager
 
 import src.config_manager as config_manager
+from src.file_mgmt.content_managers import BackBlazeContentManager
+import src.file_mgmt.datastore as file_datastore
 import src.user_mgmt.authentication as authentication
-import src.user_mgmt.datastore as datastore
+import src.user_mgmt.datastore as user_datastore
 from src.user_mgmt.model import UserManager
 
 
@@ -22,6 +24,7 @@ class FileZapServer(Flask):
         super(FileZapServer, self).__init__(__name__)
         self._init_flask_app()
         self._init_user_manager()
+        self._init_content_manager()
         self._init_login_manager()
 
 
@@ -43,8 +46,14 @@ class FileZapServer(Flask):
 
     def _init_user_manager(self):
         config = config_manager.get_config()
-        user_data_store = datastore.UserDataStore(config)
-        self.user_manager = UserManager(user_data_store)
+        user_data_store = user_datastore.UserDataStore(config)
+        file_data_store = file_datastore.FileDataStore(config)
+        self.user_manager = UserManager(user_data_store, file_data_store)
+
+
+    def _init_content_manager(self):
+        # TODO (Future): Implement logic to use configurable content managers
+        self.content_manager = BackBlazeContentManager()
 
 
     def _init_login_manager(self):

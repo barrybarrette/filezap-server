@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, redirect, current_app
 from flask_login import login_required, logout_user, current_user
 
 import src.config_manager as config_manager
-import src.file_mgmt.content_managers as content_managers
 import src.user_mgmt.controller as controller
 import src.user_mgmt.model as model
 
@@ -25,11 +24,9 @@ def register_post():
         if not username.isalpha():
             return render_template('register.html', msg=f'Invalid username. Enter only letters, no numbers or symbols')
         password = request.form.get('password')
-        user_manager = current_app.user_manager
-        user_mgmt_controller = controller.UserMgmtController(user_manager)
-        content_manager = content_managers.BackBlazeContentManager()
+        user_mgmt_controller = _get_controller()
         try:
-            user_mgmt_controller.register_user(username, password, content_manager)
+            user_mgmt_controller.register_user(username, password)
             return redirect('/')
         except model.DuplicateUserError:
             return render_template('register.html', msg=f'User {username} is already registered')
@@ -46,8 +43,7 @@ def login_view(msg=None):
 def login_post():
     username = request.form.get('username').strip().lower()
     password = request.form.get('password')
-    user_manager = current_app.user_manager
-    user_mgmt_controller = controller.UserMgmtController(user_manager)
+    user_mgmt_controller = _get_controller()
     try:
         user_mgmt_controller.login_user(username, password)
         return redirect('/')
@@ -58,9 +54,36 @@ def login_post():
 @blueprint.route('/logout', methods=['GET'])
 @login_required
 def logout():
+    _do_logout()
+    return render_template('login.html', msg='You have been logged out.')
+
+
+@blueprint.route('/deleteAccount', methods=['GET'])
+def get_delete_account():
+    return render_template('delete_account.html')
+
+
+@blueprint.route('/deleteAccount', methods=['POST'])
+def post_delete_account():
+    user_mgmt_controller = _get_controller()
+    password = request.form.get('password')
+    try:
+        user_mgmt_controller.delete_user(current_user, password)
+        _do_logout()
+        return render_template('login.html', msg='Your account and all of your files have been deleted.')
+    except controller.InvalidCredentialsError:
+        return render_template('delete_account.html', msg='Invalid password')
+
+
+def _get_controller():
+    user_manager = current_app.user_manager
+    content_manager = current_app.content_manager
+    return controller.UserMgmtController(user_manager, content_manager)
+
+
+def _do_logout():
     current_user.is_authenticated = False
     logout_user()
-    return render_template('login.html', msg='You have been logged out.')
 
 
 

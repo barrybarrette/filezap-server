@@ -38,6 +38,10 @@ class TestUserDataStore(unittest.TestCase):
         self.assertIsInstance(user, model.User)
 
 
+    def test_delete_user_queries_on_correct_key(self):
+        self.data_store.delete_user(self.user.username)
+        self.assertEqual(self.dynamodb.invoked_delete_key, {'username': self.user.username})
+
 
 
 
@@ -46,6 +50,7 @@ class DynamoDbDouble(object):
     def __init__(self):
         self.invoked_put_item = None
         self.invoked_get_key = None
+        self.invoked_delete_key = None
         self.invoked_table = None
 
 
@@ -63,3 +68,7 @@ class DynamoDbDouble(object):
         if Key.get('username') == '<invalid user>':
             return {}
         return {'Item': {'username': 'bob', 'password_hash': 'a_hash', 'salt': 'somesalt='}}
+
+
+    def delete_item(self, Key):
+        self.invoked_delete_key = Key

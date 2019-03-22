@@ -25,7 +25,12 @@ class ContentManager(object):
 
 
     def generate_credentials(self, user):
-        user.content_credentials = self._authorizer.create_user_credentials(user.username)
+        self._authorizer.create_user_credentials(user)
+
+
+    def revoke_credentials(self, user):
+        application_key_id, application_key = user.content_credentials.split(':')
+        self._authorizer.delete_user_credentials(application_key_id)
 
 
     def get_content(self, content_id, credentials):

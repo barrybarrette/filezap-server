@@ -22,3 +22,7 @@ class UserDataStore(object):
         user_dict = self._table.get_item(Key={'username': username}).get('Item')
         if user_dict:
             return model.User.from_dict(user_dict)
+
+
+    def delete_user(self, username):
+        self._table.delete_item(Key={'username': username})

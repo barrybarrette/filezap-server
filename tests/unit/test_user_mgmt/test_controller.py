@@ -9,8 +9,9 @@ class TestUserControllerBase(unittest.TestCase):
     def setUp(self):
         self.user_manager = UserManagerDouble()
         self.content_manager = ContentManagerDummy()
-        self.controller = controller.UserMgmtController(self.user_manager, self.login_callback)
-        self.user = self.controller.register_user('bob', 'plain_password', self.content_manager)
+        self.controller = controller.UserMgmtController(self.user_manager, self.content_manager, self.login_callback)
+        self.password = 'plain_password'
+        self.user = self.controller.register_user('bob', self.password)
 
 
     # Helper
@@ -35,7 +36,7 @@ class TestRegisterUser(TestUserControllerBase):
 
 
     def test_hashes_password(self):
-        hashed_password = auth.hash_password('plain_password', self.user_manager.invoked_user.salt)
+        hashed_password = auth.hash_password(self.password, self.user_manager.invoked_user.salt)
         self.assertEqual(self.user_manager.invoked_user.password_hash, hashed_password)
 
 
@@ -54,7 +55,7 @@ class TestLoginUser(TestUserControllerBase):
 
     def test_login_user_raises_exception_if_user_does_not_exist(self):
         with self.assertRaises(controller.InvalidCredentialsError):
-            self.controller.login_user('<invalid_user>', 'password')
+            self.controller.login_user('<invalid_user>', self.password)
         self.assertIsNone(self.logged_in_user)
 
 
@@ -65,10 +66,27 @@ class TestLoginUser(TestUserControllerBase):
 
 
     def test_login_user_sets_user_authentication_value_and_invokes_callback(self):
-        self.controller.register_user('bob', 'plain_password', ContentManagerDummy())
-        self.controller.login_user('bob', 'plain_password')
+        self.controller.register_user('bob', self.password)
+        self.controller.login_user('bob', self.password)
         self.assertTrue(self.logged_in_user.is_authenticated)
 
+
+
+
+class TestDeleteUser(TestUserControllerBase):
+
+
+    def test_raises_exception_if_password_is_incorrect(self):
+        with self.assertRaises(controller.InvalidCredentialsError):
+            self.controller.delete_user(self.logged_in_user, '<invalid password>')
+
+
+    def test_invokes_user_manager(self):
+        self.user_manager.invoked_user = None # Clear invocation from super.setUp
+        self.user_manager.invoked_content_manager = None  # Clear invocation from super.setUp
+        self.controller.delete_user(self.logged_in_user, self.password)
+        self.assertIs(self.user_manager.invoked_user, self.logged_in_user)
+        self.assertIs(self.user_manager.invoked_content_manager, self.content_manager)
 
 
 
@@ -92,6 +110,11 @@ class UserManagerDouble(object):
 
     def get_user(self, username):
         return self._users.get(username)
+
+
+    def delete_user(self, user, content_manager):
+        self.invoked_user = user
+        self.invoked_content_manager = content_manager
 
 
 class ContentManagerDummy(object): pass

@@ -38,11 +38,17 @@ class TestGenerateCredentials(TestContentManagerBase):
 
 
     def test_invokes_authorizer(self):
-        self.assertEqual(self.authorizer.invoked_username, 'bob')
+        self.assertIs(self.authorizer.invoked_user, self.user)
 
 
-    def test_sets_user_content_credentials(self):
-        self.assertEqual(self.user.content_credentials, 'bobs credentials')
+
+
+class TestRevokeCredentials(TestContentManagerBase):
+
+    def test_invokes_authorizer(self):
+        application_key_id = self.user.content_credentials.split(':')[0]
+        self.content_manager.revoke_credentials(self.user)
+        self.assertEqual(self.authorizer.invoked_application_key_id, application_key_id)
 
 
 
@@ -197,13 +203,17 @@ class AuthorizerDouble(object):
 
     def __init__(self):
         self.invoked_credentials = None
-        self.invoked_username = None
+        self.invoked_user = None
         self.invoked_authorization = None
+        self.invoked_application_key_id = None
 
 
-    def create_user_credentials(self, username):
-        self.invoked_username = username
-        return 'bobs credentials'
+    def create_user_credentials(self, user):
+        self.invoked_user = user
+
+
+    def delete_user_credentials(self, application_key_id):
+        self.invoked_application_key_id = application_key_id
 
 
     def authorize_api(self, credentials):

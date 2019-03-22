@@ -16,6 +16,7 @@ _AUTH_DURATION_SECONDS = 30
 
 _AUTH_URL = 'https://api.backblazeb2.com/b2api/v2/b2_authorize_account'
 _CREATE_KEY_RELATIVE_URL = 'b2api/v2/b2_create_key'
+_DELETE_KEY_RELATIVE_URL = 'b2api/v2/b2_delete_key'
 _UPLOAD_AUTH_RELATIVE_URL = 'b2api/v2/b2_get_upload_url'
 
 
@@ -49,12 +50,17 @@ class Authorizer(object):
         return _UploadAuthorization(response_json.get('uploadUrl'), response_json.get('authorizationToken'))
 
 
-    def create_user_credentials(self, username):
-        master_credentials = f'{os.environ.get(_ENV_MASTER_APP_ID)}:{os.environ.get(_ENV_MASTER_SECRET_KEY)}'
-        authorization = self.authorize_api(master_credentials)
-        self._generate_key(authorization, username)
+    def create_user_credentials(self, user):
+        authorization = self._get_master_authorization()
+        self._generate_application_key(authorization, user.username)
         response_data = self._api_response.json()
-        return f'{response_data.get("applicationKeyId")}:{response_data.get("applicationKey")}'
+        user.content_credentials = f'{response_data.get("applicationKeyId")}:{response_data.get("applicationKey")}'
+
+
+
+    def delete_user_credentials(self, application_key_id):
+        authorization = self._get_master_authorization()
+        self._delete_application_key(authorization, application_key_id)
 
 
     def _query_auth_api(self, credentials):
@@ -69,7 +75,7 @@ class Authorizer(object):
                               response_data.get('authorizationToken'))
 
 
-    def _generate_key(self, authorization, username):
+    def _generate_application_key(self, authorization, username):
         create_key_url = f'{authorization.api_url}/{_CREATE_KEY_RELATIVE_URL}'
         key_name = f'filezap-{username}' if config_manager.is_production_environment() else f'filezap-dev-{username}'
         post_json = {
@@ -90,8 +96,15 @@ class Authorizer(object):
         self._headers = {'Authorization': f'Basic {auth_string_as_base64}'}
 
 
+    def _get_master_authorization(self):
+        master_credentials = f'{os.environ.get(_ENV_MASTER_APP_ID)}:{os.environ.get(_ENV_MASTER_SECRET_KEY)}'
+        return self.authorize_api(master_credentials)
 
 
+    def _delete_application_key(self, authorization, application_key_id):
+        delete_key_url = f'{authorization.api_url}/{_DELETE_KEY_RELATIVE_URL}'
+        post_json = {'applicationKeyId': application_key_id}
+        self._requests.post(delete_key_url, headers={'Authorization': authorization.token}, json=post_json)
 
 
 
