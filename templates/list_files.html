@@ -2,19 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
     <title>FileZap</title>
+    <style>
+        body {
+          background-color: #dddddd;
+        }
+    </style>
 </head>
+
 <body>
-<a href="/logout">Log out</a><br>
-<h1>{{username}}'s files:</h1>
-{% if files %}
-<ul>
-{% for file in files %}
-  <li><a href="/get_file?contentId={{file.content_id}}">{{file.filename}}</a> <a href="/delete_file?contentId={{file.content_id}}">[X]</a></li>
-{% endfor %}
-</ul>
-{% else %}
-<h3>It looks like you haven't uploaded anything yet. Grab the app <a href="https://play.google.com/store/apps/details?id=com.shredderstudios.filezap">here!</a></h3>
-{% endif %}
+    <div class="container">
+        <a class="btn btn-info" href="/logout">Log out</a>
+        <a class="btn btn-danger" href="/deleteAccount">Delete Account</a>
+        <h1>{{username}}'s files:</h1>
+        {% if files %}
+        <ul>
+        {% for file in files %}
+          <li><a href="/get_file?contentId={{file.content_id}}">{{file.filename}}</a> <a href="/delete_file?contentId={{file.content_id}}">[X]</a></li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <h3>It looks like you haven't uploaded anything yet. Grab the app <a href="https://play.google.com/store/apps/details?id=com.shredderstudios.filezap">here!</a></h3>
+        {% endif %}
+    </div>
 </body>
 </html>

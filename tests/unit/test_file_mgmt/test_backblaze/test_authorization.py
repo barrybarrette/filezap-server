@@ -80,7 +80,8 @@ class TestCreateUserCredentials(unittest.TestCase):
         self.setUpEnv()
         self.requests = common.RequestsDouble(AuthorizeApiResponseDouble, PostResponseDouble)
         self.authorizer = authorization.Authorizer(self.requests)
-        self.credentials = self.authorizer.create_user_credentials('bob')
+        self.user = UserDouble()
+        self.credentials = self.authorizer.create_user_credentials(self.user)
 
 
     def setUpEnv(self):
@@ -135,7 +136,7 @@ class TestCreateUserCredentials(unittest.TestCase):
 
     def test_specifies_dev_in_key_name_if_non_prod_environment(self):
         os.environ['FILEZAP_ENV'] = 'NON PROD'
-        self.authorizer.create_user_credentials('bob')
+        self.authorizer.create_user_credentials(self.user)
         expected_json = {
             "accountId": "account_id",
             "capabilities": ["readFiles", "writeFiles", "deleteFiles"],
@@ -149,17 +150,78 @@ class TestCreateUserCredentials(unittest.TestCase):
     def test_raises_exception_if_user_authentication_fails(self):
         self.requests.post_status_code = '<anything not 200>'
         with self.assertRaises(exceptions.BackBlazeAuthorizationError):
-            self.authorizer.create_user_credentials('bob')
+            self.authorizer.create_user_credentials(self.user)
 
 
-    def test_returns_credentials(self):
-        self.assertEqual(self.credentials, 'app id:secret key')
+    def test_sets_user_credentials(self):
+        self.assertEqual(self.user.content_credentials, 'app id:secret key')
 
 
 # Helper
 def as_base_64(auth_string):
     return base64.b64encode(auth_string.encode()).decode()
 
+
+
+
+class TestDeleteUserCredentials(unittest.TestCase):
+
+    def setUp(self):
+        self.setUpEnv()
+        self.requests = common.RequestsDouble(AuthorizeApiResponseDouble, PostResponseDouble)
+        self.authorizer = authorization.Authorizer(self.requests)
+        self.application_key_id= ' app key id'
+        self.credentials = self.authorizer.delete_user_credentials(self.application_key_id)
+
+
+    def setUpEnv(self):
+        os.environ[authorization._ENV_MASTER_APP_ID] = 'master app id'
+        os.environ[authorization._ENV_MASTER_SECRET_KEY] = 'master secret key'
+
+
+    def tearDown(self):
+        os.environ.pop(authorization._ENV_MASTER_APP_ID)
+        os.environ.pop(authorization._ENV_MASTER_SECRET_KEY)
+
+
+
+    def test_raises_exception_if_master_authorization_fails(self):
+        self.requests.get_status_code = '<anything not 200>'
+        with self.assertRaises(exceptions.BackBlazeAuthorizationError):
+            self.authorizer.delete_user_credentials(self.application_key_id)
+
+
+    def test_authorizes_with_master_credentials(self):
+        expected_auth_header = {'Authorization': f'Basic {as_base_64("master app id:master secret key")}'}
+        self.assertEqual(self.requests.invoked_get_url, authorization._AUTH_URL)
+        self.assertEqual(self.requests.invoked_get_headers, expected_auth_header)
+
+
+    def test_request_invokes_correct_url(self):
+        expected_url = f'https://api002.example.com/{authorization._DELETE_KEY_RELATIVE_URL}'
+        self.assertEqual(self.requests.invoked_post_url, expected_url)
+
+
+    def test_request_sends_authorization_header(self):
+        expected_auth_header = {'Authorization': 'a-token'}
+        self.assertEqual(self.requests.invoked_post_headers, expected_auth_header)
+
+
+    def test_request_sends_required_json_data(self):
+        expected_json = {'applicationKeyId': self.application_key_id}
+        self.assertEqual(self.requests.invoked_post_json, expected_json)
+
+
+
+
+
+
+
+class UserDouble(object):
+
+    def __init__(self):
+        self.username = 'bob'
+        self.content_credentials = None
 
 
 

@@ -3,7 +3,7 @@ import base64
 
 
 class User(object):
-    def __init__(self, username, password_hash, salt, content_credentials=None):
+    def __init__(self, username, password_hash, salt, content_credentials=None, revocation=None):
         self.is_authenticated = False
         self.username = username
         self.password_hash = password_hash
@@ -46,9 +46,10 @@ class User(object):
 
 class UserManager(object):
 
-    def __init__(self, user_data_store):
+    def __init__(self, user_data_store, file_data_store):
         self._users = {}
-        self._data_store = user_data_store
+        self._user_data_store = user_data_store
+        self._file_data_store = file_data_store
 
 
     @property
@@ -63,17 +64,24 @@ class UserManager(object):
         return user
 
 
-    def _get_user_from_data_store(self, username):
-        user = self._data_store.get_user(username)
-        if user:
-            self._users[username] = user
-        return user
-
-
     def add_user(self, user, content_manager):
         self._do_add_user(user)
         content_manager.generate_credentials(user)
-        self._data_store.add_user(user)
+        self._user_data_store.add_user(user)
+
+
+    def delete_user(self, user, content_manager):
+        self._delete_user_files(user, content_manager)
+        content_manager.revoke_credentials(user)
+        self._user_data_store.delete_user(user.username)
+        self._users.pop(user.username)
+
+
+    def _get_user_from_data_store(self, username):
+        user = self._user_data_store.get_user(username)
+        if user:
+            self._users[username] = user
+        return user
 
 
     def _do_add_user(self, user):
@@ -81,6 +89,11 @@ class UserManager(object):
             raise DuplicateUserError()
         self._users[user.username] = user
 
+
+    def _delete_user_files(self, user, content_manager):
+        for file in self._file_data_store.get_files(user.username):
+            content_manager.delete_content(file.content_id, user.content_credentials)
+            self._file_data_store.remove_file(file.content_id, user.username)
 
 
 class DuplicateUserError(Exception):

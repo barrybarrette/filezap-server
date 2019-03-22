@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <title>Delete Account</title>
+    <style>
+        body {
+          background-color: #dddddd;
+        }
+    </style>
+</head>
+<body>
+
+
+<div class="container">
+    <form method="post" action="/deleteAccount">
+        <div class="form-group">
+            <h3>This will delete all of your stored files and your FileZap account.</h3>
+            <h3>This action cannot be undone!</h3>
+            <h5>Enter your password to confirm deletion</h5>
+            <input type="password" name="password" class="form-control form-control-lg"><br>
+            <a href="/" class="btn btn-primary">Back</a>
+            <input type="submit" class="btn btn-danger" value="Delete Account">
+        </div>
+    </form>
+    {% if msg %}
+    <div>
+        <center>
+            <h5>{{msg}}</h5>
+        </center>
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
