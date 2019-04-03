@@ -12,7 +12,7 @@ class TestFileMgmtControllerBase(unittest.TestCase):
         self.user = UserDouble('bob', self.credentials)
         self.data_store = DataStoreDouble()
         self.content_manager = ContentManagerDouble()
-        self.controller = controller.FileMgmtController(self.data_store, self.content_manager)
+        self.controller = FileMgmtControllerSpy(self.data_store, self.content_manager)
 
 
 
@@ -96,7 +96,7 @@ class TestSaveFile(TestFileMgmtControllerBase):
 
     def setUp(self):
         super(TestSaveFile, self).setUp()
-        self.file = RawFileDouble()
+        self.file = FileDouble()
         self.controller.save_file(self.file, self.user)
 
 
@@ -121,6 +121,47 @@ class TestSaveFile(TestFileMgmtControllerBase):
 
 
 
+class TestSaveFileFrom(TestFileMgmtControllerBase):
+
+    def test_raises_if_url_is_not_supported(self):
+        with self.assertRaises(controller.URLNotSupportedError):
+            self.controller.save_file_from('invalid_url', self.user)
+
+
+    def test_handles_imgur_url(self):
+        url = 'https://imgur.com/a/oUVDxci'
+        self.controller.save_file_from(url, self.user)
+        self.assertEqual(self.controller.imgur_provider.invoked_url, url)
+        self.assertEqual(self.content_manager.invoked_file.filename, 'file.jpg')
+        self.assertIs(self.content_manager.invoked_user, self.user)
+        self.assertEqual(self.content_manager.upload_count, 3)
+        self.assertEqual(self.data_store.invoked_file.filename, 'file.jpg')
+        self.assertEqual(self.data_store.added_file_count, 3)
+
+
+class FileMgmtControllerSpy(controller.FileMgmtController):
+
+    def __init__(self, data_store, content_manager):
+        super(FileMgmtControllerSpy, self).__init__(data_store, content_manager)
+        self.imgur_provider = ImgurProviderDouble()
+
+
+    def _get_imgur_provider(self):
+        return self.imgur_provider
+
+
+
+class ImgurProviderDouble(object):
+
+    def __init__(self):
+        self.invoked_url = None
+
+
+    def get_files(self, url):
+        self.invoked_url = url
+        return [FileDouble(), FileDouble(), FileDouble()]
+
+
 UserDouble = namedtuple('UserDouble', ['username', 'content_credentials'])
 
 
@@ -132,6 +173,7 @@ class ContentManagerDouble(object):
         self.invoked_file = None
         self.invoked_user = None
         self.should_raise = False
+        self.upload_count = 0
 
 
     def get_content(self, file_id, credentials):
@@ -148,6 +190,7 @@ class ContentManagerDouble(object):
 
 
     def upload_content(self, file, user):
+        self.upload_count += 1
         self.invoked_file = file
         self.invoked_user = user
         if self.should_raise:
@@ -165,6 +208,7 @@ class DataStoreDouble(object):
         self.invoked_content_id = None
         self.invoked_username = None
         self.invoked_file = None
+        self.added_file_count = 0
         self.files = []
 
 
@@ -176,7 +220,7 @@ class DataStoreDouble(object):
     def get_file(self, content_id, username):
         self.invoked_content_id = content_id
         self.invoked_username = username
-        return FileDummy()
+        return FileDouble()
 
 
     def remove_file(self, content_id, username):
@@ -185,14 +229,11 @@ class DataStoreDouble(object):
 
 
     def add_file(self, file):
+        self.added_file_count += 1
         self.invoked_file = file
 
 
-class FileDummy(object):
-    pass
-
-
-class RawFileDouble(object):
+class FileDouble(object):
 
     def __init__(self):
         self.filename = 'file.jpg'

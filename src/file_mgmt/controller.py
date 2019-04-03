@@ -1,4 +1,6 @@
 from .model import File
+import src.file_mgmt.content_providers as content_providers
+
 
 
 class FileMgmtController(object):
@@ -27,3 +29,25 @@ class FileMgmtController(object):
         content_id = self._content_manager.upload_content(raw_file, user)
         file = File(user.username, raw_file.filename, content_id)
         self._data_store.add_file(file)
+
+
+    def save_file_from(self, content_url, user):
+        content_provider = self._get_content_provider(content_url)
+        for file in content_provider.get_files(content_url):
+            self.save_file(file, user)
+
+
+    def _get_content_provider(self, content_url):
+        content_provider = None
+        if content_url.startswith('https://imgur.com'):
+            content_provider = self._get_imgur_provider()
+        if not content_provider: raise URLNotSupportedError(content_url)
+        return content_provider
+
+
+    def _get_imgur_provider(self):
+        return content_providers.ImgurContentProvider()
+
+
+class URLNotSupportedError(Exception):
+    pass

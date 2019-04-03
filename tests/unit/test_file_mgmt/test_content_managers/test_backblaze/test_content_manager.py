@@ -4,7 +4,7 @@ import unittest
 
 import urllib
 
-import tests.unit.test_file_mgmt.test_backblaze.common as common
+import tests.unit.test_file_mgmt.test_content_managers.common as common
 import src.file_mgmt.content_managers.backblaze.content_manager as content_manager
 import src.file_mgmt.content_managers.exceptions as exceptions
 

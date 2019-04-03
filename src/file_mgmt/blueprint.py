@@ -57,7 +57,17 @@ def save_file():
     file = request.files.get('file')
     ctrl = _get_controller()
     ctrl.save_file(file, current_user)
-    return "OK", 200
+    return 'OK'
+
+
+
+@blueprint.route('/from_url', methods=['POST'])
+@login_required
+def save_file_from_url():
+    url = request.json.get('url')
+    ctrl = _get_controller()
+    ctrl.save_file_from(url, current_user)
+    return 'OK'
 
 
 

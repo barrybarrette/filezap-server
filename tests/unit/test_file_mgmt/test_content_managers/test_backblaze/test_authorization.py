@@ -4,7 +4,7 @@ import unittest
 
 import src.file_mgmt.content_managers.backblaze.authorization as authorization
 import src.file_mgmt.content_managers.backblaze.exceptions as exceptions
-import tests.unit.test_file_mgmt.test_backblaze.common as common
+import tests.unit.test_file_mgmt.test_content_managers.common as common
 
 
 
