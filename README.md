@@ -36,7 +36,7 @@ At this time there is no size limit per account or per file. However, there is a
 2. Clone this repo: `git clone https://github.com/whitebarry/filezap-server.git && cd filezap-server`
 3. Create a virtual environment: 
   * Linux: `python3 -m venv venv && source venv/bin/activate`
-  * Windows: `python3 -m venv venv && venv\scripts\activate`
+  * Windows: `python -m venv venv && venv\scripts\activate`
 4. Install dependencies: `pip install -r requirements.txt`
 5. Verify install by running `bolt ut`. This will execute the unit tests and confirm you are set up. While developing, use `bolt ct` to run the unit tests continuously. 
 
