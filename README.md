@@ -51,4 +51,20 @@ You can start a local server by running `python main.py` from within your virtua
 * USER_REGISTRATION_ENABLED=True
 * FILEZAP_ENV=Production
  
-I will be adding detailed instructions on exactly how to get these set up - see [#20](https://github.com/whitebarry/filezap-server/issues/20)
+**Environment setup**
+
+**AWS**
+* [Create an AWS account](https://portal.aws.amazon.com/billing/signup)
+* Create an IAM user with the following permissions:
+![](https://i.imgur.com/WcuiAKS.png)
+* Create an access key and secret, save these as AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+![](https://i.imgur.com/22mA0W5.png)
+
+**BackBlaze**
+* [Create a BackBlaze account](https://www.backblaze.com/b2/sign-up.html)
+* Save your account id as BACKBLAZE_ACCOUNT_ID
+![](https://i.imgur.com/lMqmAqS.png)
+* Create a bucket called filezap-server, make it private and save your bucket id as BACKBLAZE_BUCKET_ID
+![](https://i.imgur.com/4209pva.png)
+* Generate a master application key, save these as BACKBLAZE_MASTER_APP_ID and BACKBLAZE_MASTER_SECRET_KEY
+![](https://i.imgur.com/LcIUJV7.png)
